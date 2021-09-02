@@ -1,37 +1,32 @@
 {
-  "name": "prismriver",
-  "version": "0.0.1",
-  "description": "A community music streaming application for Next2E.",
-  "main": "index.js",
-  "repository": "https://gitlab.com/ttpcodes/prismriver",
-  "author": "Michael William Le Nguyen <michael@mail.ttp.codes>",
-  "license": "MIT",
-  "devDependencies": {
-    "@types/jquery": "3.3.22",
-    "copy-webpack-plugin": "5.1.1",
-    "css-loader": "1.0.1",
-    "file-loader": "2.0.0",
-    "mini-css-extract-plugin": "0.4.4",
-    "ts-loader": "6.2.1",
-    "tslint": "5.11.0",
-    "tslint-config-standard": "8.0.1",
-    "typescript": "3.1.6",
-    "vue-loader": "15.4.2",
-    "vue-property-decorator": "7.2.0",
-    "vue-template-compiler": "2.6.11",
-    "webpack": "4.41.5",
-    "webpack-cli": "3.1.2"
+  "name": "web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "serve": "vue-cli-service serve",
+    "build": "vue-cli-service build",
+    "lint": "vue-cli-service lint"
   },
   "dependencies": {
-    "bootstrap": "3.4.1",
-    "jquery": "3.1.1",
-    "node-snackbar": "^0.1.15",
-    "typeface-oswald": "^0.0.54",
-    "vue": "^2.5.21",
-    "vue-class-component": "^6.3.2"
+    "vue": "^2.6.11",
+    "vue-class-component": "^7.2.3",
+    "vue-property-decorator": "^9.1.2"
   },
-  "scripts": {
-    "build": "./node_modules/.bin/webpack --mode=production",
-    "dev": "./node_modules/.bin/webpack --mode=development"
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^4.18.0",
+    "@typescript-eslint/parser": "^4.18.0",
+    "@vue/cli-plugin-eslint": "~4.5.0",
+    "@vue/cli-plugin-typescript": "~4.5.0",
+    "@vue/cli-service": "~4.5.0",
+    "@vue/eslint-config-standard": "^5.1.2",
+    "@vue/eslint-config-typescript": "^7.0.0",
+    "eslint": "^6.7.2",
+    "eslint-plugin-import": "^2.20.2",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^4.2.1",
+    "eslint-plugin-standard": "^4.0.0",
+    "eslint-plugin-vue": "^6.2.2",
+    "typescript": "~4.1.5",
+    "vue-template-compiler": "^2.6.11"
   }
 }
