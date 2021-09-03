@@ -12,9 +12,6 @@ import (
 	"os"
 	"os/signal"
 	"time"
-
-	//
-	"gitlab.com/ttpcodes/prismriver/web/dist"
 )
 
 // CreateRouter creates the Router instance used for handling all incoming HTTP requests.
@@ -31,10 +28,6 @@ func CreateRouter() {
 	r.HandleFunc("/queue/{id}", queue.UpdateHandler).Methods("PUT")
 	r.HandleFunc("/ws/player", routes.WebsocketPlayerHandler)
 	r.HandleFunc("/ws/queue", routes.WebsocketQueueHandler)
-
-	fileServer := http.FileServer(dist.HTTP)
-
-	r.PathPrefix("/").Handler(fileServer)
 
 	srv := &http.Server{
 		Addr:         "0.0.0.0:80",
