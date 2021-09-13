@@ -30,7 +30,7 @@ func CreateRouter() {
 	r.HandleFunc("/ws/queue", routes.WebsocketQueueHandler)
 
 	srv := &http.Server{
-		Addr:         "0.0.0.0:80",
+		Addr:         "0.0.0.0:8000",
 		Handler:      r,
 		IdleTimeout:  time.Second * 60,
 		ReadTimeout:  time.Second * 15,
