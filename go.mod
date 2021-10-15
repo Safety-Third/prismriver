@@ -24,7 +24,7 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.6.1
 	github.com/xfrr/goffmpeg v0.0.0-20191120110122-53b0a69281d4
-	gitlab.com/ttpcodes/youtube-dl-go v0.0.0-20200122185457-d23230135b2c
+	gitlab.com/ttpcodes/youtube-dl-go v0.0.0-20211015002410-5b7662ac5a6d
 	golang.org/x/crypto v0.0.0-20200108215511-5d647ca15757
 	golang.org/x/net v0.0.0-20191209160850-c0dbc17a3553
 	golang.org/x/sys v0.0.0-20200107162124-548cf772de50
