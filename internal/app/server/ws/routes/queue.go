@@ -28,11 +28,8 @@ func GetQueueHub() *ws.Hub {
 
 		go (func() {
 			queue := player.GetQueue()
-			for {
-				select {
-				case response := <-queue.Update:
-					queueHub.Broadcast <- response
-				}
+			for response := range queue.Update {
+				queueHub.Broadcast <- response
 			}
 		})()
 	})

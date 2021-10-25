@@ -28,11 +28,8 @@ func GetPlayerHub() *ws.Hub {
 
 		go (func() {
 			playerInstance := player.GetPlayer()
-			for {
-				select {
-				case response := <-playerInstance.Update:
-					playerHub.Broadcast <- response
-				}
+			for response := range playerInstance.Update {
+				playerHub.Broadcast <- response
 			}
 		})()
 	})

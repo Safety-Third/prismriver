@@ -1,4 +1,4 @@
-all: build
+all: build validate
 
 build:
 	fileb0x assets.json
@@ -14,6 +14,7 @@ run: build
 	./prismriver
 
 validate:
-	./scripts/validate.sh
+	go vet ./...
+	staticcheck ./...
 
 .PHONY: all build install run validate

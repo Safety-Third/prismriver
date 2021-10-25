@@ -59,12 +59,9 @@ func GetPlayer() *Player {
 		}
 		playerTicker = time.NewTicker(30 * time.Second)
 		go func() {
-			for {
-				select {
-				case <-playerTicker.C:
-					response := playerInstance.GenerateResponse()
-					playerInstance.Update <- response
-				}
+			for range playerTicker.C{
+				response := playerInstance.GenerateResponse()
+				playerInstance.Update <- response
 			}
 		}()
 	})
@@ -216,10 +213,8 @@ func (p *Player) Play(item *QueueItem) error {
 	p.State = PLAYING
 	p.sendPlayerUpdate()
 
-	select {
-	case <-p.doneChan:
-		break
-	}
+	<-p.doneChan
+
 	p.State = STOPPED
 	p.sendPlayerUpdate()
 
