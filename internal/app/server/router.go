@@ -2,8 +2,11 @@ package server
 
 import (
 	"context"
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
+	"gitlab.com/ttpcodes/prismriver/internal/app/constants"
 	"gitlab.com/ttpcodes/prismriver/internal/app/server/routes/media"
 	"gitlab.com/ttpcodes/prismriver/internal/app/server/routes/player"
 	"gitlab.com/ttpcodes/prismriver/internal/app/server/routes/queue"
@@ -30,11 +33,9 @@ func CreateRouter() {
 	r.HandleFunc("/ws/queue", routes.WebsocketQueueHandler)
 
 	srv := &http.Server{
-		Addr:         "0.0.0.0:8000",
-		Handler:      r,
-		IdleTimeout:  time.Second * 60,
-		ReadTimeout:  time.Second * 15,
-		WriteTimeout: time.Second * 15,
+		Addr: ":8000",
+		Handler: handlers.CORS(handlers.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE"}),
+			handlers.AllowedOrigins([]string{viper.GetString(constants.ORIGIN)}))(r),
 	}
 
 	go func() {
@@ -43,7 +44,7 @@ func CreateRouter() {
 			logrus.Error(err)
 		}
 	}()
-	logrus.Info("HTTP server now listening on port 80.")
+	logrus.Info("HTTP server now listening on port 8000.")
 
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Kill)

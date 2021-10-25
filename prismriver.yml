@@ -21,6 +21,9 @@
 ## DOWNLOAD_FORMAT specifies which format to use for downloading media.
 # DOWNLOAD_FORMAT: bestvideo+bestaudio/best
 
+## ORIGIN specifies an optional origin to accept cross-origin requests from.
+# ORIGIN: ''
+
 ##  VERBOSITY specifies the logging verbosity.
 # VERBOSITY: info
 
