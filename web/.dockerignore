@@ -3,5 +3,6 @@ node_modules/
 
 .dockerignore
 .gitignore
+config.json.example
 Dockerfile
 README.md

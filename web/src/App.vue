@@ -137,7 +137,12 @@ export default Vue.extend({
     }
   },
 
-  mounted () {
+  async mounted () {
+    try {
+      const config = (await this.$http.get('config.json')).data
+      this.$http.defaults.baseURL = config.API_URL
+    } catch (e) {}
+
     this.connectWS()
 
     setInterval(() => {
