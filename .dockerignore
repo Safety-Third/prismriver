@@ -1,0 +1,13 @@
+.git/
+web/
+vendor/
+
+.dockerignore
+.gitignore
+ab0x.go
+Dockerfile
+prismriver
+prismriver.service
+prismriver.yml
+prismriver-user.service
+README.md
