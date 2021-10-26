@@ -83,12 +83,14 @@ func (q *Queue) Add(media db.Media, owner uint32) {
 		ready:    make(chan bool),
 		queue:    q,
 	}
+	q.Lock()
 	if q.balancing {
 		q.items = InsertQueueItemBalanced(item, q.items)
 	} else {
 		q.items = InsertQueueItemDefault(item, q.items)
 	}
 	length := len(q.items)
+	q.Unlock()
 	q.sendQueueUpdate()
 
 	dataDir := viper.GetString(constants.DATA)
@@ -206,8 +208,9 @@ func (q *Queue) BeQuiet() {
 	player.Skip()
 }
 
-// MoveDown moves a QueueItem down in the Queue.
+// MoveDown moves a QueueItem down in the Queue. MoveDown is thread-safe.
 func (q *Queue) MoveDown(index int) {
+	q.Lock()
 	if index == len(q.items)-1 {
 		return
 	}
@@ -215,18 +218,21 @@ func (q *Queue) MoveDown(index int) {
 	q.items[index+1] = q.items[index]
 	q.items[index+1].balanced = false
 	q.items[index] = temp
+	q.Unlock()
 	q.sendQueueUpdate()
 }
 
-// MoveUp moves a QueueItem up in the Queue.
+// MoveUp moves a QueueItem up in the Queue. MoveUp is thread-safe.
 func (q *Queue) MoveUp(index int) {
 	if index == 1 {
 		return
 	}
+	q.Lock()
 	temp := q.items[index-1]
 	q.items[index-1] = q.items[index]
 	q.items[index-1].balanced = false
 	q.items[index] = temp
+	q.Unlock()
 	q.sendQueueUpdate()
 }
 
@@ -257,9 +263,11 @@ func (q *Queue) GetItems() []*QueueItem {
 	return q.items
 }
 
-// Remove removes a QueueItem from the Queue.
+// Remove removes a QueueItem from the Queue. Remove is thread-safe.
 func (q *Queue) Remove(index int) {
+	q.Lock()
 	q.items = append(q.items[:index], q.items[index+1:]...)
+	q.Unlock()
 	go q.sendQueueUpdate()
 }
 
@@ -283,6 +291,7 @@ func (q *Queue) SetBalancing(balancing bool) {
 	go q.sendQueueUpdate()
 }
 
+// sendQueueUpdate is thread-safe.
 func (q *Queue) sendQueueUpdate() {
 	response := q.GenerateResponse()
 	q.Update <- response
