@@ -1,0 +1,8 @@
+version: '3.9'
+services:
+  backend:
+    build: .
+    network_mode: host
+  frontend:
+    build: web
+    network_mode: host
