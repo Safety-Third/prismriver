@@ -29,6 +29,7 @@ type Download struct {
 type Queue struct {
 	sync.RWMutex
 
+	balancing bool
 	downloads map[string]*Download
 	items     []*QueueItem
 	Update    chan []byte
@@ -36,10 +37,18 @@ type Queue struct {
 
 // QueueItem represents a Media item waiting to be played in the Queue.
 type QueueItem struct {
-	err   string
-	Media db.Media
-	ready chan bool
-	queue *Queue
+	balanced bool
+	err      string
+	Media    db.Media
+	owner    uint32
+	ready    chan bool
+	queue    *Queue
+}
+
+// QueueResponse represents a Queue containing the necessary fields to be exported via JSON.
+type QueueResponse struct {
+	Balancing bool                `json:"balancing"`
+	Items     []QueueItemResponse `json:"items"`
 }
 
 // QueueItemResponse represents a QueueItem containing the necessary fields to be exported via JSON.
@@ -55,6 +64,7 @@ func GetQueue() *Queue {
 	queueOnce.Do(func() {
 		logrus.Info("Created queue instance.")
 		queueInstance = &Queue{
+			balancing: true,
 			downloads: make(map[string]*Download),
 			items:     make([]*QueueItem, 0),
 			Update:    make(chan []byte),
@@ -65,13 +75,19 @@ func GetQueue() *Queue {
 
 // Add adds a new Media item to the Queue as a QueueItem. If the item is detected to not be ready, it will instantiate
 // a download of the Media.
-func (q *Queue) Add(media db.Media) {
+func (q *Queue) Add(media db.Media, owner uint32) {
 	item := &QueueItem{
-		Media: media,
-		ready: make(chan bool),
-		queue: q,
+		balanced: q.balancing,
+		Media:    media,
+		owner:    owner,
+		ready:    make(chan bool),
+		queue:    q,
 	}
-	q.items = append(q.items, item)
+	if q.balancing {
+		q.items = InsertQueueItemBalanced(item, q.items)
+	} else {
+		q.items = InsertQueueItemDefault(item, q.items)
+	}
 	length := len(q.items)
 	q.sendQueueUpdate()
 
@@ -171,7 +187,7 @@ func (q *Queue) Advance() {
 func (q *Queue) BeQuiet() {
 	player := GetPlayer()
 	if len(q.items) == 0 {
-		q.Add(*db.BeQuiet)
+		q.Add(*db.BeQuiet, 0)
 		return
 	} else if player.State == LOADING {
 		return
@@ -197,6 +213,7 @@ func (q *Queue) MoveDown(index int) {
 	}
 	temp := q.items[index+1]
 	q.items[index+1] = q.items[index]
+	q.items[index+1].balanced = false
 	q.items[index] = temp
 	q.sendQueueUpdate()
 }
@@ -208,6 +225,7 @@ func (q *Queue) MoveUp(index int) {
 	}
 	temp := q.items[index-1]
 	q.items[index-1] = q.items[index]
+	q.items[index-1].balanced = false
 	q.items[index] = temp
 	q.sendQueueUpdate()
 }
@@ -221,8 +239,12 @@ func (q *Queue) GenerateResponse() []byte {
 		response := item.GenerateResponse()
 		items = append(items, response)
 	}
+	wrapper := QueueResponse{
+		Balancing: q.balancing,
+		Items:     items,
+	}
 	q.RUnlock()
-	response, err := json.Marshal(items)
+	response, err := json.Marshal(wrapper)
 	if err != nil {
 		logrus.Error("Error generating JSON response:")
 		logrus.Error(err)
@@ -238,6 +260,26 @@ func (q *Queue) GetItems() []*QueueItem {
 // Remove removes a QueueItem from the Queue.
 func (q *Queue) Remove(index int) {
 	q.items = append(q.items[:index], q.items[index+1:]...)
+	go q.sendQueueUpdate()
+}
+
+// SetBalancing turns on and off balancing queue ordering. SetBalancing is thread-safe.
+func (q *Queue) SetBalancing(balancing bool) {
+	q.Lock()
+	q.balancing = balancing
+	if q.balancing {
+		orderedItems := make([]*QueueItem, 0)
+		for _, item := range q.items {
+			item.balanced = true
+			orderedItems = InsertQueueItemBalanced(item, orderedItems)
+		}
+		q.items = orderedItems
+	} else {
+		for _, item := range q.items {
+			item.balanced = false
+		}
+	}
+	q.Unlock()
 	go q.sendQueueUpdate()
 }
 
