@@ -1,6 +1,8 @@
 package queue
 
 import (
+	"encoding/binary"
+	"net"
 	"net/http"
 	"strconv"
 
@@ -25,11 +27,23 @@ func StoreHandler(w http.ResponseWriter, r *http.Request) {
 		logrus.Warnf("error parsing boolean from video input, defaulting to false")
 		video = false
 	}
+
+	var ip uint32 = 0
+	if host, _, err := net.SplitHostPort(r.RemoteAddr); err == nil {
+		if parsed := net.ParseIP(host); parsed != nil {
+			if len(parsed) == 16 {
+				ip = binary.BigEndian.Uint32(parsed[12:16])
+			} else {
+				ip = binary.BigEndian.Uint32(parsed)
+			}
+		}
+	}
+
 	if len(id) > 0 && len(kind) > 0 {
 		media, err := db.GetMedia(id, kind)
 		if err == nil {
 			queue := player.GetQueue()
-			queue.Add(media)
+			queue.Add(media, ip)
 			return
 		}
 	}
@@ -39,7 +53,7 @@ func StoreHandler(w http.ResponseWriter, r *http.Request) {
 			queue := player.GetQueue()
 			media, err := db.GetMedia(id, name)
 			if err == nil {
-				queue.Add(media)
+				queue.Add(media, ip)
 				return
 			}
 			media, err = source.GetInfo(id, video)
@@ -51,7 +65,7 @@ func StoreHandler(w http.ResponseWriter, r *http.Request) {
 				logrus.Errorf("error storing new media item; %v", err)
 				return
 			}
-			queue.Add(media)
+			queue.Add(media, ip)
 			return
 		}
 		logrus.Warnf("client attempted to add unsupported media %v, ignoring", url)

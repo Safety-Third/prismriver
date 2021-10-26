@@ -1,4 +1,4 @@
-package queue
+package item
 
 import (
 	"github.com/gorilla/mux"

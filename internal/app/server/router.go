@@ -10,6 +10,7 @@ import (
 	"gitlab.com/ttpcodes/prismriver/internal/app/server/routes/media"
 	"gitlab.com/ttpcodes/prismriver/internal/app/server/routes/player"
 	"gitlab.com/ttpcodes/prismriver/internal/app/server/routes/queue"
+	"gitlab.com/ttpcodes/prismriver/internal/app/server/routes/queue/item"
 	"gitlab.com/ttpcodes/prismriver/internal/app/server/ws/routes"
 	"net/http"
 	"os"
@@ -27,8 +28,9 @@ func CreateRouter() {
 	r.HandleFunc("/player", player.UpdateHandler).Methods("PUT")
 	r.HandleFunc("/queue", queue.IndexHandler).Methods("GET")
 	r.HandleFunc("/queue", queue.StoreHandler).Methods("POST")
-	r.HandleFunc("/queue/{id}", queue.DeleteHandler).Methods("DELETE")
-	r.HandleFunc("/queue/{id}", queue.UpdateHandler).Methods("PUT")
+	r.HandleFunc("/queue", queue.UpdateHandler).Methods("PUT")
+	r.HandleFunc("/queue/{id}", item.DeleteHandler).Methods("DELETE")
+	r.HandleFunc("/queue/{id}", item.UpdateHandler).Methods("PUT")
 	r.HandleFunc("/ws/player", routes.WebsocketPlayerHandler)
 	r.HandleFunc("/ws/queue", routes.WebsocketQueueHandler)
 
