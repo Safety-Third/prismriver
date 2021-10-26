@@ -22,6 +22,7 @@
             <v-card outlined>
               <v-card-title class="mb-0 py-2">
                 <span>Current Queue</span>
+                <v-switch v-model="balancing" label="Queue Balancing" class="mt-0 ml-4" dense hide-details @change="updateBalancing"/>
                 <v-spacer/>
                 <v-btn depressed small color="deep-orange accent-1" @click="shuffle">
                   <v-icon>mdi-shuffle</v-icon>
@@ -102,6 +103,7 @@ export default Vue.extend({
   },
 
   data: () => ({
+    balancing: true,
     playerWS: 0,
     queue: [],
     queueWS: 0,
@@ -127,12 +129,18 @@ export default Vue.extend({
       this.socket.addEventListener('message', (event: MessageEvent) => {
         this.queueWS = 1
         const queue = JSON.parse(event.data)
-        this.queue = queue
+        this.balancing = queue.balancing
+        this.queue = queue.items
       })
     },
     shuffle () {
       this.$http.put('player', new URLSearchParams({
         shuffle: 'true'
+      }))
+    },
+    updateBalancing () {
+      this.$http.put('queue', new URLSearchParams({
+        balancing: this.balancing.toString()
       }))
     }
   },
