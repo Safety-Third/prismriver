@@ -21,7 +21,7 @@
             <br>
             <v-card outlined>
               <v-card-title class="mb-0 py-2">
-                <span>Current Queue</span>
+                <span>Current Queue <span v-if="!$vuetify.breakpoint.xs && queue.length">{{ queueDuration }}</span></span>
                 <v-switch v-model="balancing" label="Queue Balancing" class="mt-0 ml-4" dense hide-details @change="updateBalancing"/>
                 <v-spacer/>
                 <v-btn depressed small color="deep-orange accent-1" @click="shuffle">
@@ -113,6 +113,12 @@ export default Vue.extend({
         this.items.splice(1)
         this.items = this.items.concat(newItems)
       }
+    },
+    // vue-cli has an obnoxious quirk where missing return types cause the type checker to go nuts
+    queueDuration (): string {
+      return `(${this.$parseTime(this.queue.reduce((i, j: { media: { Length: number } }) => {
+        return i + j.media.Length
+      }, 0) / 1000000)})`
     },
     state () {
       return Math.max(this.playerWS, this.queueWS)
