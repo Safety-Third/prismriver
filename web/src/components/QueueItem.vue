@@ -1,6 +1,10 @@
 <template>
   <v-list-item :two-line="downloading || !!error" class="mx-0 px-0 my-0 py-0" dense>
-    <v-list-item-action class="my-0 py-0">
+    <v-list-item-action class="mr-2 my-0" v-if="!$vuetify.breakpoint.xs">
+      <!-- vuedraggable is a big screw you to all the benefits of not tightly coupling dom and logic -->
+      <v-icon class="drag">mdi-drag-vertical</v-icon>
+    </v-list-item-action>
+    <v-list-item-action class="mr-4 my-0 py-0">
       <v-btn depressed small color="deep-orange accent-1" @click="deleteSong"><v-icon>mdi-delete</v-icon></v-btn>
     </v-list-item-action>
     <v-list-item-content class="my-0 py-0">
@@ -24,6 +28,14 @@
  */
 span {
   font-size: 1.4em;
+}
+
+.drag {
+  cursor: grab;
+}
+
+.drag:active {
+  cursor: grabbing;
 }
 </style>
 

@@ -17,7 +17,7 @@
             <br>
             <SearchForm/>
             <br>
-            <Player :item="queue[0]" @update:ws="playerWS = $event"/>
+            <Player :item="playing" @update:ws="playerWS = $event"/>
             <br>
             <v-card outlined>
               <v-card-title class="mb-0 py-2">
@@ -29,16 +29,18 @@
                 </v-btn>
               </v-card-title>
               <v-divider/>
-              <v-card-text class="mb-0 pb-0 text-center" v-if="queue.length < 2">
+              <v-card-text class="mb-0 pb-0 text-center" v-if="!queue.length">
                 <h3>Queue empty. Add some music!</h3>
               </v-card-text>
               <v-card-text class="mb-0 pb-0" v-else>
-                <!-- vuetify's built-in animation tools are jank -->
-                <transition-group name="queue">
-                  <QueueItem class="queue-item" v-for="(item, i) in queue.slice(1)" :key="item.id"
-                    :disabledown="i === queue.length - 2" :disableup="i === 0" :downloading="item.downloading"
-                    :error="item.error" :index="i + 1" :progress="item.progress" :title="item.media.Title"/>
-                </transition-group>
+                <draggable v-model="queue" handle=".drag" @change="move">
+                  <!-- vuetify's built-in animation tools are jank -->
+                  <transition-group name="queue">
+                    <QueueItem class="queue-item" v-for="(item, i) in queue" :key="item.id"
+                      :disabledown="i === queue.length - 1" :disableup="i === 0" :downloading="item.downloading"
+                      :error="item.error" :index="i + 1" :progress="item.progress" :title="item.media.Title"/>
+                  </transition-group>
+                </draggable>
               </v-card-text>
               <v-card-actions/>
             </v-card>
@@ -81,6 +83,7 @@
 
 <script lang="ts">
 import Vue from 'vue'
+import draggable from 'vuedraggable'
 import Player from './components/Player.vue'
 import QueueItem from './components/QueueItem.vue'
 import SearchForm from './components/SearchForm.vue'
@@ -90,6 +93,7 @@ export default Vue.extend({
   name: 'App',
 
   components: {
+    draggable,
     Player,
     QueueItem,
     SearchForm,
@@ -97,6 +101,19 @@ export default Vue.extend({
   },
 
   computed: {
+    playing () {
+      return this.items[0]
+    },
+    queue: {
+      get () {
+        return this.items.slice(1)
+      },
+      set (newItems: never[]) {
+        // imagine writing a programming language that's actually intuitive to use
+        this.items.splice(1)
+        this.items = this.items.concat(newItems)
+      }
+    },
     state () {
       return Math.max(this.playerWS, this.queueWS)
     }
@@ -104,8 +121,8 @@ export default Vue.extend({
 
   data: () => ({
     balancing: true,
+    items: [],
     playerWS: 0,
-    queue: [],
     queueWS: 0,
     results: [],
     socket: null as WebSocket | null
@@ -130,8 +147,13 @@ export default Vue.extend({
         this.queueWS = 1
         const queue = JSON.parse(event.data)
         this.balancing = queue.balancing
-        this.queue = queue.items
+        this.items = queue.items
       })
+    },
+    move (event: { moved: { newIndex: number, oldIndex: number } }) {
+      this.$http.put(`queue/${event.moved.oldIndex + 1}`, new URLSearchParams({
+        move: (event.moved.newIndex + 1).toString()
+      }))
     },
     shuffle () {
       this.$http.put('player', new URLSearchParams({
