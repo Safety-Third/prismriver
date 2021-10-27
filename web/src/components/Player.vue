@@ -33,7 +33,7 @@ export default Vue.extend({
 
   computed: {
     progress (): string {
-      return `${this.parseTime(this.currentTime / 1000)} / ${this.parseTime(this.totalTime / 1000)}`
+      return `${this.$parseTime(this.currentTime / 1000)} / ${this.$parseTime(this.totalTime / 1000)}`
     },
     title () {
       if (this.item) {
@@ -77,18 +77,6 @@ export default Vue.extend({
           this.totalTime = 1
         }
       })
-    },
-    parseTime (time: number, recur = false): string {
-      time = Math.floor(time)
-      let timeString = ''
-      timeString = time % 60 < 10 ? '0' + time % 60 + timeString : time % 60 + timeString
-      if (time / 60 < 1 && !recur) {
-        return '0:' + timeString
-      } else if (time / 60 < 1) {
-        return timeString
-      } else {
-        return this.parseTime(time / 60, true) + ':' + timeString
-      }
     },
     seek (time: number) {
       this.seeking = false
