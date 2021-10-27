@@ -16,19 +16,14 @@ func UpdateHandler(w http.ResponseWriter, r *http.Request) {
 		logrus.Warn("Error parsing int in UpdateHandler, user likely provided incorrect input.")
 		return
 	}
-	if int(index) == 0 {
-		return
-	}
 	queue := player.GetQueue()
-	items := queue.GetItems()
-	if int(index) < len(items) {
-		r.ParseForm()
-		move := r.Form.Get("move")
-		switch move {
-		case "up":
-			queue.MoveUp(int(index))
-		case "down":
-			queue.MoveDown(int(index))
+	r.ParseForm()
+	move := r.Form.Get("move")
+	switch move {
+	case "down":
+		queue.MoveUp(int(index))
+	case "up":
+		queue.MoveDown(int(index))
 		}
 	}
 }

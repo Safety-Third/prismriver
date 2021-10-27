@@ -77,7 +77,7 @@ func GetQueue() *Queue {
 }
 
 // Add adds a new Media item to the Queue as a QueueItem. If the item is detected to not be ready, it will instantiate
-// a download of the Media.
+// a download of the Media. Add is thread-safe.
 func (q *Queue) Add(media db.Media, owner uint32) {
 	q.Lock()
 	var id uint32 = 0
@@ -97,9 +97,6 @@ func (q *Queue) Add(media db.Media, owner uint32) {
 	} else {
 		q.items = InsertQueueItemDefault(item, q.items)
 	}
-	length := len(q.items)
-	q.Unlock()
-	q.sendQueueUpdate()
 
 	dataDir := viper.GetString(constants.DATA)
 	source := downloader.GetSource(media.Type)
@@ -113,15 +110,15 @@ func (q *Queue) Add(media db.Media, owner uint32) {
 	}
 	filePath := path.Join(dataDir, media.Type, media.ID+ext)
 	_, err := os.Stat(filePath)
-	q.RLock()
 	download, ok := q.downloads[item.Media.ID]
-	q.RUnlock()
 	if item.Media.Type != "internal" && (os.IsNotExist(err) || ok) {
 		if ok {
 			go func() {
 				<-download.doneCh
 				if download.err != "" {
+					q.Lock()
 					item.err = download.err
+					q.Unlock()
 					q.sendQueueUpdate()
 					return
 				}
@@ -132,9 +129,7 @@ func (q *Queue) Add(media db.Media, owner uint32) {
 			download := &Download{
 				doneCh: make(chan struct{}),
 			}
-			q.Lock()
 			q.downloads[item.Media.ID] = download
-			q.Unlock()
 
 			progressChan, doneChan, err := source.DownloadMedia(media)
 			if err != nil {
@@ -154,15 +149,15 @@ func (q *Queue) Add(media db.Media, owner uint32) {
 					download.err = err.Error()
 					item.err = err.Error()
 					delete(q.downloads, item.Media.ID)
-					q.Unlock()
 					close(download.doneCh)
+					q.Unlock()
 					q.sendQueueUpdate()
 					return
 				}
 				q.Lock()
 				delete(q.downloads, item.Media.ID)
-				q.Unlock()
 				close(download.doneCh)
+				q.Unlock()
 				q.sendQueueUpdate()
 				item.ready <- true
 				close(item.ready)
@@ -176,28 +171,34 @@ func (q *Queue) Add(media db.Media, owner uint32) {
 		}()
 	}
 	player := GetPlayer()
-	if player.State == STOPPED && length == 1 {
+	if player.State == STOPPED && len(q.items) == 1 {
 		go player.Play(item)
 	}
+	q.Unlock()
 	q.sendQueueUpdate()
 	logrus.Info("Added " + media.Title + " to queue.")
 }
 
-// Advance moves the Queue up by one and plays the next item if it exists.
+// Advance moves the Queue up by one and plays the next item if it exists. Advance is thread-safe.
 func (q *Queue) Advance() {
+	q.Lock()
 	q.items = q.items[1:]
 	if len(q.items) > 0 {
 		player := GetPlayer()
 		go player.Play(q.items[0])
 	}
-	go q.sendQueueUpdate()
+	q.Unlock()
+	q.sendQueueUpdate()
 }
 
-// BeQuiet replaces the currently playing item with the BeQuiet Media and plays it.
+// BeQuiet replaces the currently playing item with the BeQuiet Media and plays it. BeQuiet is thread-safe.
 func (q *Queue) BeQuiet() {
 	player := GetPlayer()
+	q.Lock()
+	defer q.Unlock()
 	if len(q.items) == 0 {
 		q.Add(*db.BeQuiet, 0)
+		q.Unlock()
 		return
 	} else if player.State == LOADING {
 		return
@@ -244,7 +245,7 @@ func (q *Queue) MoveUp(index int) {
 	q.sendQueueUpdate()
 }
 
-// GenerateResponse generates a JSON response of all the QueueItems in the Queue.
+// GenerateResponse generates a JSON response of all the QueueItems in the Queue. GenerateResponse is thread-safe.
 func (q *Queue) GenerateResponse() []byte {
 	// Cannot return a nil slice or the frontend will have issues.
 	items := make([]QueueItemResponse, 0)
@@ -266,17 +267,16 @@ func (q *Queue) GenerateResponse() []byte {
 	return response
 }
 
-// GetItems returns the QueueItems in the Queue.
-func (q *Queue) GetItems() []*QueueItem {
-	return q.items
-}
-
-// Remove removes a QueueItem from the Queue. Remove is thread-safe.
+// Remove removes a QueueItem from the Queue. Remove is thread-safe. Note that slice indices must be integers in Go.
 func (q *Queue) Remove(index int) {
 	q.Lock()
-	q.items = append(q.items[:index], q.items[index+1:]...)
+	if index < len(q.items) {
+		q.items = append(q.items[:index], q.items[index+1:]...)
+	} else {
+		logrus.Infof("user attempted to remove now nonexistent queue item at index %v, ignoring", index)
+	}
 	q.Unlock()
-	go q.sendQueueUpdate()
+	q.sendQueueUpdate()
 }
 
 // SetBalancing turns on and off balancing queue ordering. SetBalancing is thread-safe.
@@ -296,7 +296,7 @@ func (q *Queue) SetBalancing(balancing bool) {
 		}
 	}
 	q.Unlock()
-	go q.sendQueueUpdate()
+	q.sendQueueUpdate()
 }
 
 func (q *Queue) contains(id uint32) bool {
@@ -335,15 +335,17 @@ func (q QueueItem) Progress() (bool, int) {
 	return true, download.progress
 }
 
-// Shuffle performs a shuffle on the items in the Queue.
+// Shuffle performs a shuffle on the items in the Queue. Shuffle is thread-safe.
 func (q *Queue) Shuffle() {
+	q.Lock()
 	if len(q.items) > 1 {
 		// Offset by one since we don't want to modify the currently playing item.
-		q.Lock()
 		rand.Shuffle(len(q.items)-1, func(i, j int) {
 			q.items[i+1], q.items[j+1] = q.items[j+1], q.items[i+1]
 		})
 		q.Unlock()
 		q.sendQueueUpdate()
+	} else {
+		q.Unlock()
 	}
 }
