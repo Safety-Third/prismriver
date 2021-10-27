@@ -35,7 +35,7 @@
               <v-card-text class="mb-0 pb-0" v-else>
                 <!-- vuetify's built-in animation tools are jank -->
                 <transition-group name="queue">
-                  <QueueItem class="queue-item" v-for="(item, i) in queue.slice(1)" :key="item.media.ID"
+                  <QueueItem class="queue-item" v-for="(item, i) in queue.slice(1)" :key="item.id"
                     :disabledown="i === queue.length - 2" :disableup="i === 0" :downloading="item.downloading"
                     :error="item.error" :index="i + 1" :progress="item.progress" :title="item.media.Title"/>
                 </transition-group>
