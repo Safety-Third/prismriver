@@ -23,6 +23,11 @@
     chalk "^2.0.0"
     js-tokens "^4.0.0"
 
+"@fontsource/oswald@*":
+  version "4.5.1"
+  resolved "https://registry.yarnpkg.com/@fontsource/oswald/-/oswald-4.5.1.tgz#48f09df43bc840a05da3654241e95e43d004ff05"
+  integrity sha512-YwHphBXhgVKmwyEkNAqiBrYI+WLrxI9ZOQfGtoZjJHfDC3/SjwACSFeWdk0Sg7EHVcMAC5pppGPhJ7UJO4xo4A==
+
 "@hapi/address@2.x.x":
   version "2.1.4"
   resolved "https://registry.yarnpkg.com/@hapi/address/-/address-2.1.4.tgz#5d67ed43f3fd41a69d4b9ff7b56e7c0d1d0a81e5"
@@ -63,6 +68,11 @@
     cssnano "^4.0.0"
     cssnano-preset-default "^4.0.0"
     postcss "^7.0.0"
+
+"@mdi/font@5.9.55":
+  version "5.9.55"
+  resolved "https://registry.yarnpkg.com/@mdi/font/-/font-5.9.55.tgz#41acd50b88073ded7095fc3029d8712b6e12f38e"
+  integrity sha512-jswRF6q3eq8NWpWiqct6q+6Fg/I7nUhrxYJfiEM8JJpap0wVJLQdbKtyS65GdlK7S7Ytnx3TTi/bmw+tBhkGmg==
 
 "@mrmlnc/readdir-enhanced@^2.2.1":
   version "2.2.1"

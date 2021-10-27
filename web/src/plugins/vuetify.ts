@@ -1,3 +1,5 @@
+import '@fontsource/oswald/index.css'
+import '@mdi/font/css/materialdesignicons.css'
 import Vue from 'vue'
 import { colors } from 'vuetify/lib'
 import Vuetify from 'vuetify/lib/framework'
