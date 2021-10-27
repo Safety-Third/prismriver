@@ -3,7 +3,7 @@
     <v-card-title class="deep-orange py-2 white--text">Currently Playing</v-card-title>
     <v-divider/>
     <v-card-text>
-      <h3 class="black--text font-weight-medium text-h6">{{ title }}</h3>
+      <h3 class="black--text font-weight-medium text-h6 text-truncate">{{ title }}</h3>
       <ProgressBar v-if="item && (item.downloading || !!item.error)" :error="item.error" :progress="item.progress"/>
     </v-card-text>
     <v-card-actions class="mb-0 pb-0">
