@@ -20,8 +20,12 @@ func UpdateHandler(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	move := r.Form.Get("move")
 	switch move {
+	case "bottom":
+		queue.MoveTo(int(index), -1)
 	case "down":
 		queue.MoveTo(int(index), int(index+1))
+	case "top":
+		queue.MoveTo(int(index), 1)
 	case "up":
 		queue.MoveTo(int(index), int(index-1))
 	default:

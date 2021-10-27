@@ -219,10 +219,13 @@ func (q *Queue) BeQuiet() {
 
 // MoveTo moves a QueueItem to a specific position in the Queue. MoveTo is thread-safe.
 func (q *Queue) MoveTo(index int, to int) {
+	q.Lock()
+	if to == -1 {
+		to = len(q.items) - 1
+	}
 	if index == 0 || index == to || to == 0 {
 		return
 	}
-	q.Lock()
 	if index < len(q.items) && to < len(q.items) {
 		item := q.items[index]
 		q.items = append(q.items[:index], q.items[index + 1:]...)
