@@ -48,6 +48,12 @@ func CreateRouter() {
 	}()
 	logrus.Info("HTTP server now listening on port 8000.")
 
+	// we call the methods used for retrieving the websocket instances to guarantee that they are instantiated in order
+	// to prevent potential deadlocks caused by the player and queue sending updates on their channels that aren't
+	// being handled
+	routes.GetPlayerHub()
+	routes.GetQueueHub()
+
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 
