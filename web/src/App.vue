@@ -49,9 +49,9 @@
     </v-main>
 
     <v-footer color="primary white--text">
-      <v-col cols="auto">2GroovE the website; Made by 2E residents one time they were bored.</v-col>
+      <v-col :cols="$vuetify.breakpoint.xs ? 8 : 'auto'" class="text-truncate">2GroovE the website; Made by 2E residents one time they were bored.</v-col>
       <v-spacer/>
-      <v-col class="text-right"><a class="white--text" href="https://next2e.github.io"><v-icon color="white">mdi-earth</v-icon> 2E Website</a></v-col>
+      <v-col :cols="$vuetify.breakpoint.xs ? 4 : 'auto'" class="text-right"><a class="white--text" href="https://next2e.github.io"><v-icon color="white">mdi-earth</v-icon> 2E Website</a></v-col>
     </v-footer>
   </v-app>
 </template>
