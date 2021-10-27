@@ -39,6 +39,8 @@ type Queue struct {
 type QueueItem struct {
 	balanced bool
 	err      string
+	// go doesn't have a method for returning a random generic uint for some reason
+	id       uint32
 	Media    db.Media
 	owner    uint32
 	ready    chan bool
@@ -55,6 +57,7 @@ type QueueResponse struct {
 type QueueItemResponse struct {
 	Downloading bool     `json:"downloading"`
 	Error       string   `json:"error"`
+	Id          uint32   `json:"id"`
 	Media       db.Media `json:"media"`
 	Progress    int      `json:"progress"`
 }
@@ -76,14 +79,19 @@ func GetQueue() *Queue {
 // Add adds a new Media item to the Queue as a QueueItem. If the item is detected to not be ready, it will instantiate
 // a download of the Media.
 func (q *Queue) Add(media db.Media, owner uint32) {
+	q.Lock()
+	var id uint32 = 0
+	for q.contains(id) {
+		id = rand.Uint32()
+	}
 	item := &QueueItem{
 		balanced: q.balancing,
+		id:       id,
 		Media:    media,
 		owner:    owner,
 		ready:    make(chan bool),
 		queue:    q,
 	}
-	q.Lock()
 	if q.balancing {
 		q.items = InsertQueueItemBalanced(item, q.items)
 	} else {
@@ -291,6 +299,15 @@ func (q *Queue) SetBalancing(balancing bool) {
 	go q.sendQueueUpdate()
 }
 
+func (q *Queue) contains(id uint32) bool {
+	for _, item := range q.items {
+		if item.id == id {
+			return true
+		}
+	}
+	return false
+}
+
 // sendQueueUpdate is thread-safe.
 func (q *Queue) sendQueueUpdate() {
 	response := q.GenerateResponse()
@@ -303,6 +320,7 @@ func (q QueueItem) GenerateResponse() QueueItemResponse {
 	return QueueItemResponse{
 		Downloading: downloading,
 		Error:       q.err,
+		Id:          q.id,
 		Media:       q.Media,
 		Progress:    progress,
 	}
