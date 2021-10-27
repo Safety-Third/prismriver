@@ -217,30 +217,25 @@ func (q *Queue) BeQuiet() {
 	player.Skip()
 }
 
-// MoveDown moves a QueueItem down in the Queue. MoveDown is thread-safe.
-func (q *Queue) MoveDown(index int) {
-	q.Lock()
-	if index == len(q.items)-1 {
-		return
-	}
-	temp := q.items[index+1]
-	q.items[index+1] = q.items[index]
-	q.items[index+1].balanced = false
-	q.items[index] = temp
-	q.Unlock()
-	q.sendQueueUpdate()
-}
-
-// MoveUp moves a QueueItem up in the Queue. MoveUp is thread-safe.
-func (q *Queue) MoveUp(index int) {
-	if index == 1 {
+// MoveTo moves a QueueItem to a specific position in the Queue. MoveTo is thread-safe.
+func (q *Queue) MoveTo(index int, to int) {
+	if index == 0 || index == to || to == 0 {
 		return
 	}
 	q.Lock()
-	temp := q.items[index-1]
-	q.items[index-1] = q.items[index]
-	q.items[index-1].balanced = false
-	q.items[index] = temp
+	if index < len(q.items) && to < len(q.items) {
+		item := q.items[index]
+		q.items = append(q.items[:index], q.items[index + 1:]...)
+		if to == len(q.items) {
+			q.items = append(q.items, item)
+		} else {
+			q.items = append(q.items[:to], q.items[to - 1:]...)
+			q.items[to] = item
+		}
+		item.balanced = false
+	} else {
+		logrus.Warnf("user provided invalid request to move item at index %v to new index %v", index, to)
+	}
 	q.Unlock()
 	q.sendQueueUpdate()
 }

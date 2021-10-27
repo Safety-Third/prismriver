@@ -21,9 +21,15 @@ func UpdateHandler(w http.ResponseWriter, r *http.Request) {
 	move := r.Form.Get("move")
 	switch move {
 	case "down":
-		queue.MoveUp(int(index))
+		queue.MoveTo(int(index), int(index+1))
 	case "up":
-		queue.MoveDown(int(index))
+		queue.MoveTo(int(index), int(index-1))
+	default:
+		to, err := strconv.ParseUint(move, 10, 8)
+		if err != nil {
+			logrus.Warnf("could not parse %v as a valid move instruction, ignoring request", move)
+			return
 		}
+		queue.MoveTo(int(index), int(to))
 	}
 }
