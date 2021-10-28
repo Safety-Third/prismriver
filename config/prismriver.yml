@@ -1,31 +1,31 @@
 ## Uncomment any of these lines to manually specify a setting for them.
 
-## DATADIR specifies the data storage directory.
-# DATADIR: /var/lib/prismriver
+## data_dir specifies the data storage directory.
+# data_dir: /var/lib/prismriver
 
-## DB_HOST specifies the database connection host.
-# DB_HOST: localhost
+## db_host specifies the database connection host.
+# db_host: localhost
 
-## DB_NAME specifies the database name.
-# DB_NAME: prismriver
+## db_name specifies the database name.
+# db_name: prismriver
 
-## DB_PASSWORD specifies the database connection password.
-# DB_PASSWORD: prismriver
+## db_password specifies the database connection password.
+# db_password: prismriver
 
-## DB_PORT specifies the database connection port.
-# DB_PORT: 5432
+## db_port specifies the database connection port.
+# db_port: 5432
 
-## DB_USER specifies the database connection user.
-# DB_USER: prismriver
+## db_user specifies the database connection user.
+# db_user: prismriver
 
-## DOWNLOAD_FORMAT specifies which format to use for downloading media.
-# DOWNLOAD_FORMAT: bestvideo+bestaudio/best
+## download_format specifies which format to use for downloading media.
+# download_format: bestvideo+bestaudio/best
 
-## ORIGIN specifies an optional origin to accept cross-origin requests from.
-# ORIGIN: ''
+## origin specifies an optional origin to accept cross-origin requests from.
+# origin: ''
 
-##  VERBOSITY specifies the logging verbosity.
-# VERBOSITY: info
+## verbosity specifies the logging verbosity.
+# verbosity: info
 
-## VIDEO_TRANSCODING specifies whether or not to enable video transcoding.
-# VIDEO_TRANSCODING: true
+## video_transcoding specifies whether or not to enable video transcoding.
+# video_transcoding: true

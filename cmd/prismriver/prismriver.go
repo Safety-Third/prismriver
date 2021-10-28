@@ -16,30 +16,30 @@ import (
 
 func main() {
 	// Set up configuration framework.
-	viper.SetEnvPrefix("PRISMRIVER")
+	viper.SetEnvPrefix("prismriver")
 	viper.AutomaticEnv()
 
 	viper.SetDefault(constants.DATA, "/var/lib/prismriver")
-	viper.SetDefault(constants.DBHOST, "localhost")
-	viper.SetDefault(constants.DBNAME, "prismriver")
-	viper.SetDefault(constants.DBPASSWORD, "prismriver")
-	viper.SetDefault(constants.DBPORT, "5432")
-	viper.SetDefault(constants.DBUSER, "prismriver")
-	viper.SetDefault(constants.DOWNLOADFORMAT, "bestvideo+bestaudio/best")
+	viper.SetDefault(constants.DB_HOST, "localhost")
+	viper.SetDefault(constants.DB_NAME, "prismriver")
+	viper.SetDefault(constants.DB_PASSWORD, "prismriver")
+	viper.SetDefault(constants.DB_PORT, "5432")
+	viper.SetDefault(constants.DB_USER, "prismriver")
+	viper.SetDefault(constants.DOWNLOAD_FORMAT, "bestvideo+bestaudio/best")
 	viper.SetDefault(constants.ORIGIN, "")
 	viper.SetDefault(constants.VERBOSITY, "info")
-	viper.SetDefault(constants.VIDEOTRANSCODING, true)
+	viper.SetDefault(constants.VIDEO_TRANSCODING, true)
 
 	envVars := []string{
-		constants.DBHOST,
-		constants.DBNAME,
-		constants.DBPASSWORD,
-		constants.DBPORT,
-		constants.DBUSER,
-		constants.DOWNLOADFORMAT,
+		constants.DB_HOST,
+		constants.DB_NAME,
+		constants.DB_PASSWORD,
+		constants.DB_PORT,
+		constants.DB_USER,
+		constants.DOWNLOAD_FORMAT,
 		constants.ORIGIN,
 		constants.VERBOSITY,
-		constants.VIDEOTRANSCODING,
+		constants.VIDEO_TRANSCODING,
 	}
 
 	for _, env := range envVars {
@@ -48,9 +48,9 @@ func main() {
 		}
 	}
 
-	viper.SetConfigFile(constants.CONFIGPATH)
+	viper.SetConfigFile(constants.CONFIG_PATH)
 	if err := viper.ReadInConfig(); err != nil {
-		logrus.Warnf("could not read config file, ignoring: %v", err)
+		logrus.Infof("could not read config file, ignoring: %v", err)
 	}
 
 	verbosity := viper.GetString(constants.VERBOSITY)
@@ -59,6 +59,19 @@ func main() {
 		logrus.Errorf("Error reading verbosity level in configuration: %v", err)
 	}
 	logrus.SetLevel(level)
+	// trust me, there isn't a nicer way to do this without type hacking or structs to track things like variable
+	// privacy.
+	logrus.Debugf("current configuration:")
+	logrus.Debugf("%v: %v", constants.DB_HOST, viper.GetString(constants.DB_HOST))
+	logrus.Debugf("%v: %v", constants.DB_NAME, viper.GetString(constants.DB_NAME))
+	logrus.Debugf("%v: [hidden]", constants.DB_PASSWORD)
+	logrus.Debugf("%v: %v", constants.DB_PORT, viper.GetString(constants.DB_PORT))
+	logrus.Debugf("%v: %v", constants.DB_USER, viper.GetString(constants.DB_USER))
+	logrus.Debugf("%v: %v", constants.DOWNLOAD_FORMAT, viper.GetString(constants.DOWNLOAD_FORMAT))
+	logrus.Debugf("%v: %v", constants.ORIGIN, viper.GetString(constants.ORIGIN))
+	logrus.Debugf("%v: %v", constants.VERBOSITY, viper.GetString(constants.VERBOSITY))
+	logrus.Debugf("%v: %v", constants.VIDEO_TRANSCODING, viper.GetBool(constants.VIDEO_TRANSCODING))
+
 	dataDir := viper.GetString(constants.DATA)
 	if err := os.MkdirAll(path.Join(dataDir, "internal"), os.ModeDir|0755); err != nil {
 		logrus.Fatalf("error creating data directories: %v", err)

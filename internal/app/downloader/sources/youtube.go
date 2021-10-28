@@ -32,7 +32,7 @@ func (y YouTube) DownloadMedia(media db.Media) (chan float64, chan error, error)
 		}
 		downloader := youtubedl.NewDownloader(media.ID)
 
-		format := viper.GetString(constants.DOWNLOADFORMAT)
+		format := viper.GetString(constants.DOWNLOAD_FORMAT)
 		downloader.Format(format)
 		downloader.Output("/tmp/" + youtubedl.ID)
 		eventChan, closeChan, err := downloader.RunProgress()
@@ -54,7 +54,7 @@ func (y YouTube) DownloadMedia(media db.Media) (chan float64, chan error, error)
 		logrus.Debug("Downloaded media file")
 
 		dataDir := viper.GetString(constants.DATA)
-		if !media.Video || viper.GetBool(constants.VIDEOTRANSCODING) {
+		if !media.Video || viper.GetBool(constants.VIDEO_TRANSCODING) {
 			trans := new(transcoder.Transcoder)
 			ext := ".opus"
 			if media.Video {

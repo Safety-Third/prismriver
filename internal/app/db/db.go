@@ -28,11 +28,11 @@ var BeQuiet = &Media{
 // GetDatabase gets the instance of the database connection used for the application.
 func GetDatabase() (*gorm.DB, error) {
 	once.Do(func() {
-		dbHost := viper.GetString(constants.DBHOST)
-		dbName := viper.GetString(constants.DBNAME)
-		dbPassword := viper.GetString(constants.DBPASSWORD)
-		dbPort := viper.GetString(constants.DBPORT)
-		dbUser := viper.GetString(constants.DBUSER)
+		dbHost := viper.GetString(constants.DB_HOST)
+		dbName := viper.GetString(constants.DB_NAME)
+		dbPassword := viper.GetString(constants.DB_PASSWORD)
+		dbPort := viper.GetString(constants.DB_PORT)
+		dbUser := viper.GetString(constants.DB_USER)
 		connString := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", dbHost,
 			dbPort, dbUser, dbPassword, dbName)
 		newDb, openErr := gorm.Open("postgres", connString)

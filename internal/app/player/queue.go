@@ -102,7 +102,7 @@ func (q *Queue) Add(media db.Media, owner uint32) {
 	source := downloader.GetSource(media.Type)
 	ext := ".opus"
 	if media.Video && source.HasVideo() {
-		if viper.GetBool(constants.VIDEOTRANSCODING) {
+		if viper.GetBool(constants.VIDEO_TRANSCODING) {
 			ext = ".mp4"
 		} else {
 			ext = ".video"

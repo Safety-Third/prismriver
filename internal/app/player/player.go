@@ -119,7 +119,7 @@ func (p *Player) Play(item *QueueItem) error {
 	source := downloader.GetSource(item.Media.Type)
 	ext := ".opus"
 	if item.Media.Video && source.HasVideo() {
-		if viper.GetBool(constants.VIDEOTRANSCODING) {
+		if viper.GetBool(constants.VIDEO_TRANSCODING) {
 			ext = ".mp4"
 		} else {
 			ext = ".video"
