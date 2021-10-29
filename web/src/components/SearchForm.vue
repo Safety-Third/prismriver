@@ -21,7 +21,7 @@
           </v-col>
         </v-card-text>
         <v-card-text v-if="results.length">
-          <SearchItem class="my-0 py-0" v-for="(item, i) in results" :key="i" :item="item" :title="item.Title"/>
+          <SearchItem class="my-0 py-0" v-for="(item, i) in results" :key="i" :id="item.ID" :item="item" :title="item.Title" :type="item.Type"/>
         </v-card-text>
         <v-card-text v-else>
           <h3 class="text-center">No results found.</h3>
