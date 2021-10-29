@@ -43,8 +43,7 @@ func CreateRouter() {
 
 	go func() {
 		if err := srv.ListenAndServe(); err != nil {
-			logrus.Error("Error on starting HTTP server:")
-			logrus.Error(err)
+			logrus.Fatalf("could not start http server: %v", err)
 		}
 	}()
 	logrus.Info("HTTP server now listening on port 8000.")
