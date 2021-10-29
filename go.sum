@@ -151,6 +151,12 @@ github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2/go.mod h1:UETIi67q
 github.com/xordataexchange/crypt v0.0.3-0.20170626215501-b2862e3d0a77/go.mod h1:aYKd//L2LvnjZzWKhF00oedf4jCCReLcmhLdhm1A27Q=
 gitlab.com/ttpcodes/youtube-dl-go v0.0.0-20211015002410-5b7662ac5a6d h1:8DgD+5my3fEhN3wQ78WztWaRlDalha8rM7sthL4iaiY=
 gitlab.com/ttpcodes/youtube-dl-go v0.0.0-20211015002410-5b7662ac5a6d/go.mod h1:TS/QQ9Y4aPePZALqqvNQuXORGdUdCIf2Ux2qnSi3fdk=
+gitlab.com/ttpcodes/youtube-dl-go v0.0.0-20211027042416-1bf997b4253f h1:X/5B3cNjgFTnm5v1ROmJ0bqxG9Wy+Wn4UwFCrUZc9Ao=
+gitlab.com/ttpcodes/youtube-dl-go v0.0.0-20211027042416-1bf997b4253f/go.mod h1:TS/QQ9Y4aPePZALqqvNQuXORGdUdCIf2Ux2qnSi3fdk=
+gitlab.com/ttpcodes/youtube-dl-go v0.0.0-20211028200816-3faa7cf5e296 h1:7C2aIo7yvOCo0sWnw8A6rU0DSow6I57tSOoceA4f78E=
+gitlab.com/ttpcodes/youtube-dl-go v0.0.0-20211028200816-3faa7cf5e296/go.mod h1:TS/QQ9Y4aPePZALqqvNQuXORGdUdCIf2Ux2qnSi3fdk=
+gitlab.com/ttpcodes/youtube-dl-go v0.0.0-20211028205529-9df4c2402efd h1:W/xg5fgpJY9FpqU6rZlSB3vfPMnPAlEDlb1vhWW2klc=
+gitlab.com/ttpcodes/youtube-dl-go v0.0.0-20211028205529-9df4c2402efd/go.mod h1:TS/QQ9Y4aPePZALqqvNQuXORGdUdCIf2Ux2qnSi3fdk=
 go.etcd.io/bbolt v1.3.2/go.mod h1:IbVyRI1SCnLcuJnV2u8VeU0CEYM7e686BmAb1XKL+uU=
 go.uber.org/atomic v1.4.0/go.mod h1:gD2HeocX3+yG+ygLZcrzQJaqmWj9AIm7n08wl/qW/PE=
 go.uber.org/multierr v1.1.0/go.mod h1:wR5kodmAFQ0UK8QlbwjlSNy0Z68gJhDJUG5sjR94q/0=
