@@ -1,6 +1,10 @@
 package db
 
-import "time"
+import (
+	"github.com/sirupsen/logrus"
+
+	"time"
+)
 
 // Media represents a Media item in the database.
 type Media struct {
@@ -14,4 +18,12 @@ type Media struct {
 	Type   string `gorm:"primary_key"`
 	Video  bool   `gorm:"not null"`
 	URL    string `gorm:"not null"`
+}
+
+func (m Media) Save() {
+	db, err := GetDatabase()
+	if err != nil {
+		logrus.Fatalf("could not load database: %v", err)
+	}
+	db.Save(&m)
 }

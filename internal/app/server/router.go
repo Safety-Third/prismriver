@@ -25,6 +25,7 @@ func CreateRouter() {
 	r := mux.NewRouter()
 	r.HandleFunc("/media/random", media.RandomHandler).Methods("GET")
 	r.HandleFunc("/media/search", media.SearchHandler).Methods("GET")
+	r.HandleFunc("/media/{type}/{id}", media.UpdateHandler).Methods("PUT")
 	r.HandleFunc("/player", player.UpdateHandler).Methods("PUT")
 	r.HandleFunc("/queue", queue.IndexHandler).Methods("GET")
 	r.HandleFunc("/queue", queue.StoreHandler).Methods("POST")
