@@ -25,12 +25,19 @@ type Download struct {
 	progress int
 }
 
+// DownloadKey represents a identifier for a specific Download via its id, type, and video status.
+type DownloadKey struct {
+	id        string
+	mediaType string
+	video     bool
+}
+
 // Queue represents a queue of Media items waiting to be played.
 type Queue struct {
 	sync.RWMutex
 
 	balancing bool
-	downloads map[string]*Download
+	downloads map[DownloadKey]*Download
 	items     []*QueueItem
 	Update    chan []byte
 }
@@ -68,7 +75,7 @@ func GetQueue() *Queue {
 		logrus.Info("Created queue instance.")
 		queueInstance = &Queue{
 			balancing: true,
-			downloads: make(map[string]*Download),
+			downloads: make(map[DownloadKey]*Download),
 			items:     make([]*QueueItem, 0),
 			Update:    make(chan []byte),
 		}
@@ -109,7 +116,12 @@ func (q *Queue) Add(media db.Media, owner uint32) {
 	}
 	filePath := path.Join(dataDir, media.Type, media.ID+ext)
 	_, err := os.Stat(filePath)
-	download, ok := q.downloads[item.Media.ID]
+	key := DownloadKey{
+		id:        item.Media.ID,
+		mediaType: item.Media.Type,
+		video:     item.Media.Video,
+	}
+	download, ok := q.downloads[key]
 	if item.Media.Type != "internal" && (os.IsNotExist(err) || ok) {
 		if ok {
 			go func() {
@@ -128,7 +140,7 @@ func (q *Queue) Add(media db.Media, owner uint32) {
 			download := &Download{
 				doneCh: make(chan struct{}),
 			}
-			q.downloads[item.Media.ID] = download
+			q.downloads[key] = download
 
 			progressChan, doneChan, err := downloader.DownloadMedia(media)
 			if err != nil {
@@ -147,14 +159,14 @@ func (q *Queue) Add(media db.Media, owner uint32) {
 					q.Lock()
 					download.err = err.Error()
 					item.err = err.Error()
-					delete(q.downloads, item.Media.ID)
+					delete(q.downloads, key)
 					close(download.doneCh)
 					q.Unlock()
 					q.sendQueueUpdate()
 					return
 				}
 				q.Lock()
-				delete(q.downloads, item.Media.ID)
+				delete(q.downloads, key)
 				close(download.doneCh)
 				q.Unlock()
 				q.sendQueueUpdate()
@@ -248,8 +260,7 @@ func (q *Queue) GenerateResponse() []byte {
 	items := make([]QueueItemResponse, 0)
 	q.RLock()
 	for _, item := range q.items {
-		response := item.GenerateResponse()
-		items = append(items, response)
+		items = append(items, item.GenerateResponse())
 	}
 	wrapper := QueueResponse{
 		Balancing: q.balancing,
@@ -325,7 +336,12 @@ func (q QueueItem) GenerateResponse() QueueItemResponse {
 
 // Progress returns the download progress of the QueueItem.
 func (q QueueItem) Progress() (bool, int) {
-	download, ok := q.queue.downloads[q.Media.ID]
+	key := DownloadKey{
+		id:        q.Media.ID,
+		mediaType: q.Media.Type,
+		video:     q.Media.Video,
+	}
+	download, ok := q.queue.downloads[key]
 	if !ok {
 		return false, 100
 	}
