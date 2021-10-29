@@ -1,9 +1,10 @@
 <template>
   <v-list-item class="px-0 py-0" dense>
-    <v-list-item-action class="my-0 py-0">
+    <v-list-item-action class="mr-2 my-0 py-0">
       <v-btn depressed small class="text-none text-h6" color="deep-orange accent-1" @click="queue">Add</v-btn>
     </v-list-item-action>
-    <v-list-item-content class="my-0 py-0">
+    <v-list-item-action v-if="video"><v-icon>mdi-video</v-icon></v-list-item-action>
+    <v-list-item-content class="ml-1 my-0 py-0">
       <v-list-item-title class="my-0 py-0"><span>{{ title }}</span></v-list-item-title>
     </v-list-item-content>
     <v-snackbar timeout="3000" v-model="addMessage">Added "{{ title }}"  to queue!</v-snackbar>
@@ -26,9 +27,9 @@ export default Vue.extend({
   name: 'SearchItem',
 
   data: () => ({
-    addMessage: false
+    addMessage: false,
+    video: false,
   }),
-
   methods: {
     async queue (): Promise<void> {
       await this.$http.post('queue', new URLSearchParams({
@@ -38,7 +39,9 @@ export default Vue.extend({
       this.addMessage = true
     }
   },
-
+  mounted () {
+    this.video = this.item.Video
+  },
   props: ['item', 'title']
 })
 </script>

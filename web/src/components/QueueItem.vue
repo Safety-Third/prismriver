@@ -4,11 +4,12 @@
       <!-- vuedraggable is a big screw you to all the benefits of not tightly coupling dom and logic -->
       <v-icon class="drag">mdi-drag-vertical</v-icon>
     </v-list-item-action>
-    <v-list-item-action class="mr-4 my-0 py-0">
+    <v-list-item-action class="mr-2 my-0 py-0">
       <v-btn depressed small color="deep-orange accent-1" @click="deleteSong"><v-icon>mdi-delete</v-icon></v-btn>
     </v-list-item-action>
+    <v-list-item-action v-if="video" class="mr-1"><v-icon>mdi-video</v-icon></v-list-item-action>
     <v-list-item-content class="my-0 py-0">
-      <v-list-item-title class="my-0 py-0"><span>{{ title }}</span></v-list-item-title>
+      <v-list-item-title class="align-center my-0 py-0"><span> {{ title }}</span></v-list-item-title>
       <v-list-item-subtitle v-if="downloading || !!error">
         <ProgressBar :error="error" :progress="progress"/>
       </v-list-item-subtitle>
@@ -74,6 +75,6 @@ export default Vue.extend({
     }
   },
 
-  props: ['disabledown', 'disableup', 'downloading', 'error', 'index', 'progress', 'title']
+  props: ['disabledown', 'disableup', 'downloading', 'error', 'index', 'progress', 'title', 'video']
 })
 </script>

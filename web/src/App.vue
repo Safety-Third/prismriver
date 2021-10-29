@@ -38,7 +38,7 @@
                   <transition-group name="queue">
                     <QueueItem class="queue-item" v-for="(item, i) in queue" :key="item.id"
                       :disabledown="i === queue.length - 1" :disableup="i === 0" :downloading="item.downloading"
-                      :error="item.error" :index="i + 1" :progress="item.progress" :title="item.media.Title"/>
+                      :error="item.error" :index="i + 1" :progress="item.progress" :title="item.media.Title" :video="item.media.Video"/>
                   </transition-group>
                 </draggable>
               </v-card-text>

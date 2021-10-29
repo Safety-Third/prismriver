@@ -1,6 +1,7 @@
 <template>
   <v-card outlined>
-    <v-card-title class="deep-orange py-2 white--text">Currently Playing</v-card-title>
+    <!-- we either get the space to show up automatically between things or actually have things be centered vertically. thanks vuetify. -->
+    <v-card-title class="deep-orange py-2 white--text"><span>Currently Playing </span><v-icon v-if="item && item.media.Video" class="ml-1" color="white" large>mdi-video</v-icon></v-card-title>
     <v-divider/>
     <v-card-text>
       <h3 class="black--text font-weight-medium text-h6 text-truncate">{{ title }}</h3>
