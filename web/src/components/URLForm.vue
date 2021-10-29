@@ -3,10 +3,10 @@
     <v-card-title class="py-2">Queue Music - Enter a link or go random!</v-card-title>
     <v-card-text class="align-center d-flex my-0 py-0">
       <v-col class="mx-0 px-0 my-0 py-0" :cols="$vuetify.breakpoint.xs ? 6 : 8">
-        <v-text-field class="my-0 py-0" dense hide-details outlined label="Music URL" v-model="url" @keydown.enter.prevent="submit"/>
+        <v-text-field class="my-0 py-0" dense hide-details outlined label="Music URL" v-model="url" :disabled="adding" @keydown.enter.prevent="submit"/>
       </v-col>
       <v-col class="mx-0 px-2 my-0 py-0" :cols="$vuetify.breakpoint.xs ? 3 : 2">
-        <v-btn depressed class="my-0 py-0 text-none text-h6" color="deep-orange accent-1" width="100%" @click="submit">Add</v-btn>
+        <v-btn depressed class="my-0 py-0 text-none text-h6" color="deep-orange accent-1" width="100%" :disabled="adding" :loading="adding" @click="submit">Add</v-btn>
       </v-col>
       <v-col class="mx-0 px-0 my-0 py-0" :cols="$vuetify.breakpoint.xs ? 3 : 2">
         <v-btn depressed class="my-0 py-0 text-none text-h6" color="deep-orange accent-1" width="100%" @click="random">Random</v-btn>
@@ -36,6 +36,7 @@ export default Vue.extend({
   name: 'URLForm',
 
   data: () => ({
+    adding: false,
     addMessage: false,
     randomMessage: false,
     video: false,
@@ -56,6 +57,7 @@ export default Vue.extend({
       this.randomMessage = true
     },
     async submit () {
+      this.adding = true
       await this.$http.post('queue', new URLSearchParams({
         url: this.url,
         video: this.video.toString()
@@ -63,6 +65,7 @@ export default Vue.extend({
       this.addMessage = true
       this.url = ''
       this.video = false
+      this.adding = false
     }
   }
 })
