@@ -83,6 +83,20 @@ func GetMedia(id string, kind string) (Media, error) {
 	return Media{}, errors.New("media not found in DB")
 }
 
+// GetMediaByURL attempts to return the Media identified by url, and returns an error if not found.
+func GetMediaByURL(url string) (Media, error) {
+	db, err := GetDatabase()
+	if err != nil {
+		logrus.Fatalf("could not load database: %v", err)
+	}
+	var media []Media
+	db.Where(Media{URL: url}).First(&media)
+	if len(media) > 0 {
+		return media[0], nil
+	}
+	return Media{}, errors.New(fmt.Sprintf("media with url %v not found in database", url))
+}
+
 // GetRandomMedia returns a number of random Media specified by limit.
 func GetRandomMedia(limit int) []Media {
 	db, err := GetDatabase()

@@ -10,7 +10,6 @@ import (
 
 	"gitlab.com/ttpcodes/prismriver/assets"
 	"gitlab.com/ttpcodes/prismriver/internal/app/constants"
-	"gitlab.com/ttpcodes/prismriver/internal/app/downloader"
 	"gitlab.com/ttpcodes/prismriver/internal/app/server"
 )
 
@@ -19,6 +18,7 @@ func main() {
 	viper.SetEnvPrefix("prismriver")
 	viper.AutomaticEnv()
 
+	viper.SetDefault(constants.ALLOWED_TYPES, []string{"soundcloud", "youtube"})
 	viper.SetDefault(constants.DATA, "/var/lib/prismriver")
 	viper.SetDefault(constants.DB_HOST, "localhost")
 	viper.SetDefault(constants.DB_NAME, "prismriver")
@@ -31,6 +31,7 @@ func main() {
 	viper.SetDefault(constants.VIDEO_TRANSCODING, true)
 
 	envVars := []string{
+		constants.ALLOWED_TYPES,
 		constants.DB_HOST,
 		constants.DB_NAME,
 		constants.DB_PASSWORD,
@@ -62,6 +63,10 @@ func main() {
 	// trust me, there isn't a nicer way to do this without type hacking or structs to track things like variable
 	// privacy.
 	logrus.Debugf("current configuration:")
+	logrus.Debugf("%v:", constants.ALLOWED_TYPES)
+	for _, allowedType := range viper.GetStringSlice(constants.ALLOWED_TYPES) {
+		logrus.Debugf("- %v", allowedType)
+	}
 	logrus.Debugf("%v: %v", constants.DB_HOST, viper.GetString(constants.DB_HOST))
 	logrus.Debugf("%v: %v", constants.DB_NAME, viper.GetString(constants.DB_NAME))
 	logrus.Debugf("%v: [hidden]", constants.DB_PASSWORD)
@@ -75,10 +80,6 @@ func main() {
 	dataDir := viper.GetString(constants.DATA)
 	if err := os.MkdirAll(path.Join(dataDir, "internal"), os.ModeDir|0755); err != nil {
 		logrus.Fatalf("error creating data directories: %v", err)
-	}
-
-	if err := downloader.InitializeDownloader(); err != nil {
-		logrus.Fatalf("error initializing downloader: %v", err)
 	}
 
 	beQuiet, err := assets.HTTP.Open("bequiet.opus")

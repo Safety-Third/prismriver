@@ -12,7 +12,6 @@ import (
 	"github.com/spf13/viper"
 
 	"gitlab.com/ttpcodes/prismriver/internal/app/constants"
-	"gitlab.com/ttpcodes/prismriver/internal/app/downloader"
 )
 
 var playerInstance *Player
@@ -116,9 +115,8 @@ func (p *Player) Play(item *QueueItem) error {
 	}()
 	p.State = LOADING
 	dataDir := viper.GetString(constants.DATA)
-	source := downloader.GetSource(item.Media.Type)
 	ext := ".opus"
-	if item.Media.Video && source.HasVideo() {
+	if item.Media.Video {
 		if viper.GetBool(constants.VIDEO_TRANSCODING) {
 			ext = ".mp4"
 		} else {

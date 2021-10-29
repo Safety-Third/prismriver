@@ -48,27 +48,31 @@ func StoreHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	if len(url) != 0 {
-		id, name, source := downloader.FindSource(url)
-		if id != "" {
+		if downloader.ValidateURL(url) {
 			queue := player.GetQueue()
-			media, err := db.GetMedia(id, name)
+			media, err := db.GetMediaByURL(url)
 			if err == nil {
 				queue.Add(media, ip)
 				return
 			}
-			media, err = source.GetInfo(id, video)
+			newMedia, err := downloader.GetInfo(url, video)
 			if err != nil {
-				logrus.Errorf("could not get video info: %v", err)
+				logrus.Errorf("could not get media info for %v, %v", url, err)
 				return
 			}
-			if err := db.AddMedia(media); err != nil {
+			media, err = db.GetMedia(newMedia.ID, newMedia.Type)
+			if err == nil {
+				queue.Add(media, ip)
+				return
+			}
+			if err := db.AddMedia(newMedia); err != nil {
 				logrus.Errorf("error storing new media item; %v", err)
 				return
 			}
-			queue.Add(media, ip)
+			queue.Add(newMedia, ip)
 			return
 		}
-		logrus.Warnf("client attempted to add unsupported media %v, ignoring", url)
+		logrus.Infof("client attempted to add unsupported media %v, ignoring", url)
 		return
 	}
 	logrus.Warn("User sent an empty POST request, ignoring.")

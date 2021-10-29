@@ -1,5 +1,10 @@
 ## Uncomment any of these lines to manually specify a setting for them.
 
+## allowed_types specifies the media types allowed to be downloaded.
+# allowed_types:
+#   - soundcloud
+#   - youtube
+
 ## data_dir specifies the data storage directory.
 # data_dir: /var/lib/prismriver
 

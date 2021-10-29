@@ -99,9 +99,8 @@ func (q *Queue) Add(media db.Media, owner uint32) {
 	}
 
 	dataDir := viper.GetString(constants.DATA)
-	source := downloader.GetSource(media.Type)
 	ext := ".opus"
-	if media.Video && source.HasVideo() {
+	if media.Video {
 		if viper.GetBool(constants.VIDEO_TRANSCODING) {
 			ext = ".mp4"
 		} else {
@@ -131,7 +130,7 @@ func (q *Queue) Add(media db.Media, owner uint32) {
 			}
 			q.downloads[item.Media.ID] = download
 
-			progressChan, doneChan, err := source.DownloadMedia(media)
+			progressChan, doneChan, err := downloader.DownloadMedia(media)
 			if err != nil {
 				logrus.Errorf("error when downloading media: %v", err)
 				return

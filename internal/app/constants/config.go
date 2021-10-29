@@ -4,6 +4,8 @@ package constants
 // these should very much be camelCased but viper requires a string replacer in order to parse environment variable
 // names, which would be a pain to get working with anything that isn't snake_cased.
 const (
+	// ALLOWED_TYPES specifies the media types allowed to be downloaded.
+	ALLOWED_TYPES = "allowed_types"
 	// DATA specifies the data storage directory.
 	DATA = "data_dir"
 	// DB_HOST specifies the database connection host.

@@ -13,4 +13,5 @@ type Media struct {
 	Title  string `gorm:"not null"`
 	Type   string `gorm:"primary_key"`
 	Video  bool   `gorm:"not null"`
+	URL    string `gorm:"not null"`
 }
