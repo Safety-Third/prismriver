@@ -56,7 +56,11 @@ func WebsocketQueueHandler(w http.ResponseWriter, r *http.Request) {
 	go client.RunWrite()
 
 	queue := player.GetQueue()
-	response := queue.GenerateResponse()
+	response, err := queue.List()
+	if err != nil {
+		logrus.Errorf("error generating queue response: %v", err)
+		return
+	}
 	client.Send <- response
 	logrus.Debug("Sent initial message on WS connection.")
 }

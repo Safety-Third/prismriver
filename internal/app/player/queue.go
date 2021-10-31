@@ -87,6 +87,7 @@ func GetQueue() *Queue {
 // a download of the Media. Add is thread-safe.
 func (q *Queue) Add(media db.Media, owner uint32) {
 	q.Lock()
+	defer q.Unlock()
 	var id uint32 = 0
 	for q.contains(id) {
 		id = rand.Uint32()
@@ -128,8 +129,8 @@ func (q *Queue) Add(media db.Media, owner uint32) {
 				<-download.doneCh
 				if download.err != "" {
 					q.Lock()
+					defer q.Unlock()
 					item.err = download.err
-					q.Unlock()
 					q.sendQueueUpdate()
 					return
 				}
@@ -152,24 +153,24 @@ func (q *Queue) Add(media db.Media, owner uint32) {
 				for progress := range progressChan {
 					q.Lock()
 					download.progress = int(progress)
-					q.Unlock()
 					q.sendQueueUpdate()
+					q.Unlock()
 				}
 				if err := <-doneChan; err != nil {
 					q.Lock()
+					defer q.Unlock()
 					download.err = err.Error()
 					item.err = err.Error()
 					delete(q.downloads, key)
 					close(download.doneCh)
-					q.Unlock()
 					q.sendQueueUpdate()
 					return
 				}
 				q.Lock()
 				delete(q.downloads, key)
 				close(download.doneCh)
-				q.Unlock()
 				q.sendQueueUpdate()
+				q.Unlock()
 				item.ready <- true
 				close(item.ready)
 			}()
@@ -185,7 +186,6 @@ func (q *Queue) Add(media db.Media, owner uint32) {
 	if player.State == STOPPED && len(q.items) == 1 {
 		go player.Play(item)
 	}
-	q.Unlock()
 	q.sendQueueUpdate()
 	logrus.Info("Added " + media.Title + " to queue.")
 }
@@ -193,12 +193,12 @@ func (q *Queue) Add(media db.Media, owner uint32) {
 // Advance moves the Queue up by one and plays the next item if it exists. Advance is thread-safe.
 func (q *Queue) Advance() {
 	q.Lock()
+	defer q.Unlock()
 	q.items = q.items[1:]
 	if len(q.items) > 0 {
 		player := GetPlayer()
 		go player.Play(q.items[0])
 	}
-	q.Unlock()
 	q.sendQueueUpdate()
 }
 
@@ -228,9 +228,21 @@ func (q *Queue) BeQuiet() {
 	player.Skip()
 }
 
+// List returns all of the items currently on the queue as a JSON response. List is thread safe.
+func (q *Queue) List() ([]byte, error) {
+	q.RLock()
+	defer q.RUnlock()
+	response, err := q.generateResponse()
+	if err != nil {
+		return nil, err
+	}
+	return response, nil
+}
+
 // MoveTo moves a QueueItem to a specific position in the Queue. MoveTo is thread-safe.
 func (q *Queue) MoveTo(index int, to int) {
 	q.Lock()
+	defer q.Unlock()
 	if to == -1 {
 		to = len(q.items) - 1
 	}
@@ -247,49 +259,46 @@ func (q *Queue) MoveTo(index int, to int) {
 			q.items[to] = item
 		}
 		item.balanced = false
+		q.sendQueueUpdate()
 	} else {
 		logrus.Warnf("user provided invalid request to move item at index %v to new index %v", index, to)
 	}
-	q.Unlock()
-	q.sendQueueUpdate()
 }
 
-// GenerateResponse generates a JSON response of all the QueueItems in the Queue. GenerateResponse is thread-safe.
-func (q *Queue) GenerateResponse() []byte {
+// generateResponse generates a JSON response of all the QueueItems in the Queue.
+func (q *Queue) generateResponse() ([]byte, error) {
 	// Cannot return a nil slice or the frontend will have issues.
 	items := make([]QueueItemResponse, 0)
-	q.RLock()
 	for _, item := range q.items {
-		items = append(items, item.GenerateResponse())
+		items = append(items, item.generateResponse())
 	}
 	wrapper := QueueResponse{
 		Balancing: q.balancing,
 		Items:     items,
 	}
-	q.RUnlock()
 	response, err := json.Marshal(wrapper)
 	if err != nil {
-		logrus.Error("Error generating JSON response:")
-		logrus.Error(err)
+		return nil, err
 	}
-	return response
+	return response, nil
 }
 
 // Remove removes a QueueItem from the Queue. Remove is thread-safe. Note that slice indices must be integers in Go.
 func (q *Queue) Remove(index int) {
 	q.Lock()
+	defer q.Unlock()
 	if index < len(q.items) {
 		q.items = append(q.items[:index], q.items[index+1:]...)
+		q.sendQueueUpdate()
 	} else {
 		logrus.Infof("user attempted to remove now nonexistent queue item at index %v, ignoring", index)
 	}
-	q.Unlock()
-	q.sendQueueUpdate()
 }
 
 // SetBalancing turns on and off balancing queue ordering. SetBalancing is thread-safe.
 func (q *Queue) SetBalancing(balancing bool) {
 	q.Lock()
+	defer q.Unlock()
 	q.balancing = balancing
 	if q.balancing {
 		orderedItems := make([]*QueueItem, 0)
@@ -303,7 +312,6 @@ func (q *Queue) SetBalancing(balancing bool) {
 			item.balanced = false
 		}
 	}
-	q.Unlock()
 	q.sendQueueUpdate()
 }
 
@@ -316,15 +324,18 @@ func (q *Queue) contains(id uint32) bool {
 	return false
 }
 
-// sendQueueUpdate is thread-safe.
 func (q *Queue) sendQueueUpdate() {
-	response := q.GenerateResponse()
+	response, err := q.generateResponse()
+	if err != nil {
+		logrus.Errorf("error generating queue response: %v", err)
+		return
+	}
 	q.Update <- response
 }
 
-// GenerateResponse returns the QueueItemResponse form of the QueueItem.
-func (q QueueItem) GenerateResponse() QueueItemResponse {
-	downloading, progress := q.Progress()
+// generateResponse returns the QueueItemResponse form of the QueueItem.
+func (q QueueItem) generateResponse() QueueItemResponse {
+	downloading, progress := q.progress()
 	return QueueItemResponse{
 		Downloading: downloading,
 		Error:       q.err,
@@ -335,7 +346,7 @@ func (q QueueItem) GenerateResponse() QueueItemResponse {
 }
 
 // Progress returns the download progress of the QueueItem.
-func (q QueueItem) Progress() (bool, int) {
+func (q QueueItem) progress() (bool, int) {
 	key := DownloadKey{
 		id:        q.Media.ID,
 		mediaType: q.Media.Type,
@@ -351,14 +362,12 @@ func (q QueueItem) Progress() (bool, int) {
 // Shuffle performs a shuffle on the items in the Queue. Shuffle is thread-safe.
 func (q *Queue) Shuffle() {
 	q.Lock()
+	defer q.Unlock()
 	if len(q.items) > 1 {
 		// Offset by one since we don't want to modify the currently playing item.
 		rand.Shuffle(len(q.items)-1, func(i, j int) {
 			q.items[i+1], q.items[j+1] = q.items[j+1], q.items[i+1]
 		})
-		q.Unlock()
 		q.sendQueueUpdate()
-	} else {
-		q.Unlock()
 	}
 }
