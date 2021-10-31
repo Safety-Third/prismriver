@@ -125,7 +125,7 @@ func DownloadMedia(media db.Media) (chan float64, chan error, error) {
 			logrus.Warnf("error when removing temporary file: %v", err)
 		}
 		logrus.Debug("removed temporary youtube-dl file")
-		logrus.Infof("downloaded new file for YouTube video ID %s", media.ID)
+		logrus.Infof("downloaded new file for media with id %v and type %v", media.ID, media.Type)
 		callDone(nil)
 	}()
 	return progressChan, doneChan, nil
