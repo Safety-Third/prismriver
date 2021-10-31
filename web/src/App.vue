@@ -7,7 +7,7 @@
     </v-app-bar>
 
     <v-main>
-      <v-container>
+      <v-container fluid>
         <v-row>
           <v-col cols="2" v-if="!$vuetify.breakpoint.xs"/>
           <v-col :cols="$vuetify.breakpoint.xs ? 12 : 8">
