@@ -51,13 +51,18 @@ func DownloadMedia(media db.Media) (chan float64, chan error, error) {
 		logrus.Debug("Downloaded media file")
 
 		dataDir := viper.GetString(constants.DATA)
+		dirPath := path.Join(dataDir, media.Type)
+		if err := os.MkdirAll(dirPath, os.ModeDir|0755); err != nil {
+			callDone(err)
+			return
+		}
 		if !media.Video || viper.GetBool(constants.VIDEO_TRANSCODING) {
 			trans := new(transcoder.Transcoder)
 			ext := ".opus"
 			if media.Video {
 				ext = ".mp4"
 			}
-			filePath := path.Join(dataDir, media.Type, media.ID+ext)
+			filePath := path.Join(dirPath, media.ID+ext)
 			err = trans.Initialize(result.Path, filePath)
 			if err != nil {
 				logrus.Error("Error starting transcoding process:\n", err)
@@ -99,7 +104,7 @@ func DownloadMedia(media db.Media) (chan float64, chan error, error) {
 					logrus.Errorf("error closing input file: %v", err)
 				}
 			}()
-			output, err := os.Create(path.Join(dataDir, media.Type, media.ID+".video"))
+			output, err := os.Create(path.Join(dirPath, media.ID+".video"))
 			if err != nil {
 				logrus.Errorf("error opening destination file: %v", err)
 				callDone(err)
