@@ -9,7 +9,7 @@
     <v-main>
       <v-container fluid>
         <v-row>
-          <v-col cols="2" v-if="!$vuetify.breakpoint.xs"/>
+          <v-col :cols="$vuetify.breakpoint.xs ? 0 : 2"/>
           <v-col :cols="$vuetify.breakpoint.xs ? 12 : 8">
             <v-alert v-if="state === 0" type="error">The player has disconnected from the server. Attempting to reconnect...</v-alert>
             <v-alert v-if="state === 2" type="warning">The page has encountered errors. The current queue may be outdated.</v-alert>
@@ -45,7 +45,7 @@
               <v-card-actions/>
             </v-card>
           </v-col>
-          <v-col cols="2" v-if="!$vuetify.breakpoint.xs"/>
+          <v-col :cols="$vuetify.breakpoint.xs ? 0 : 2"/>
         </v-row>
       </v-container>
     </v-main>
