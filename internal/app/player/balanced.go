@@ -15,7 +15,7 @@ func InsertQueueItemBalanced(item *QueueItem, queue []*QueueItem) []*QueueItem {
 					queue[index] = item
 					return queue
 				} else {
-					priority[existing.owner] = existing.Media.Length
+					priority[existing.owner] += existing.Media.Length
 				}
 			} else {
 				queue = append(queue[:index + 1], queue[index:]...)
