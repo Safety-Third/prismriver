@@ -15,10 +15,10 @@
         <v-card>
           <v-card-title><v-icon large class="mr-1">mdi-{{ type }}</v-icon><span class="text-h5 text-truncate">{{ title }}</span></v-card-title>
           <v-card-text>
-            <v-text-field label="ID" dense disabled outlined :value="id"/>
-            <v-text-field label="Length" dense disabled outlined :value="$parseTime(this.item.Length / 1000000)"/>
-            <v-text-field label="Created At" dense disabled outlined :value="new Date(item.CreatedAt).toLocaleString()"/>
-            <v-text-field label="Last Updated" dense disabled hide-details outlined :value="new Date(item.UpdatedAt).toLocaleString()"/>
+            <v-text-field label="ID" dense outlined readonly :value="id"/>
+            <v-text-field label="Length" dense outlined readonly :value="$parseTime(this.item.Length / 1000000)"/>
+            <v-text-field label="Created At" dense outlined readonly :value="new Date(item.CreatedAt).toLocaleString()"/>
+            <v-text-field label="Last Updated" dense hide-details outlined readonly :value="new Date(item.UpdatedAt).toLocaleString()"/>
             <v-switch v-model="video" hide-details label="Video" :disabled="updatingVideo" @change="updateVideo"/>
           </v-card-text>
           <v-card-actions>
