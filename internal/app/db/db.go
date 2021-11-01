@@ -7,6 +7,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"gitlab.com/ttpcodes/prismriver/internal/app/constants"
+	"math"
 	"sync"
 
 	// Import Postgres dialect.
@@ -59,14 +60,19 @@ func AddMedia(media Media) error {
 
 // FindMedia searches the database for Media items matching the title in query and returns the number of results
 // specified by limit.
-func FindMedia(query string, limit int) []Media {
+func FindMedia(query string, limit uint, page uint) ([]Media, uint) {
 	db, err := GetDatabase()
 	if err != nil {
 		logrus.Fatal("Error loading database:", err)
 	}
+	if page == 0 {
+		page = 1
+	}
 	var media []Media
-	db.Limit(limit).Where("title ILIKE ? AND type <> ?", "%"+query+"%", "internal").Find(&media)
-	return media
+	db.Limit(limit).Offset((page - 1) * limit).Where("title ILIKE ? AND type <> ?", "%"+query+"%", "internal").Find(&media)
+	var count float64
+	db.Model(&Media{}).Where("title ILIKE ? AND type <> ?", "%" + query + "%", "internal").Count(&count)
+	return media, uint(math.Ceil(count / float64(limit)))
 }
 
 // GetMedia attempts to return the Media identified by id and kind, and returns an error if not found.
@@ -98,7 +104,7 @@ func GetMediaByURL(url string) (Media, error) {
 }
 
 // GetRandomMedia returns a number of random Media specified by limit.
-func GetRandomMedia(limit int) []Media {
+func GetRandomMedia(limit uint) []Media {
 	db, err := GetDatabase()
 	if err != nil {
 		logrus.Fatal("Error loading database:", err)
