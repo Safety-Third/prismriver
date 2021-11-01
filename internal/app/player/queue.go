@@ -1,6 +1,7 @@
 package player
 
 import (
+	"context"
 	"encoding/json"
 	"math/rand"
 	"os"
@@ -45,12 +46,14 @@ type Queue struct {
 // QueueItem represents a Media item waiting to be played in the Queue.
 type QueueItem struct {
 	balanced bool
+	cancel   context.CancelFunc
+	ctx      context.Context
 	err      string
 	// go doesn't have a method for returning a random generic uint for some reason
 	id       uint32
 	Media    db.Media
 	owner    uint32
-	ready    chan bool
+	ready    chan struct{}
 	queue    *Queue
 }
 
@@ -92,12 +95,15 @@ func (q *Queue) Add(media db.Media, owner uint32) {
 	for q.contains(id) {
 		id = rand.Uint32()
 	}
+	ctx, cancel := context.WithCancel(context.Background())
 	item := &QueueItem{
 		balanced: q.balancing,
+		cancel:   cancel,
+		ctx:      ctx,
 		id:       id,
 		Media:    media,
 		owner:    owner,
-		ready:    make(chan bool),
+		ready:    make(chan struct{}),
 		queue:    q,
 	}
 	if q.balancing {
@@ -134,7 +140,6 @@ func (q *Queue) Add(media db.Media, owner uint32) {
 					q.sendQueueUpdate()
 					return
 				}
-				item.ready <- true
 				close(item.ready)
 			}()
 		} else {
@@ -171,14 +176,12 @@ func (q *Queue) Add(media db.Media, owner uint32) {
 				close(download.doneCh)
 				q.sendQueueUpdate()
 				q.Unlock()
-				item.ready <- true
 				close(item.ready)
 			}()
 		}
 	} else {
-		logrus.Debug("Queue item ready. Sending on channel.")
+		logrus.Debugf("queue item %v ready", item.id)
 		go func() {
-			item.ready <- true
 			close(item.ready)
 		}()
 	}
@@ -217,15 +220,14 @@ func (q *Queue) BeQuiet() {
 	quietQueue := make([]*QueueItem, 0)
 	quietItem := &QueueItem{
 		Media: *db.BeQuiet,
-		ready: make(chan bool, 1),
+		ready: make(chan struct{}),
 		queue: q,
 	}
-	quietItem.ready <- true
 	close(quietItem.ready)
 	quietQueue = append(quietQueue, q.items[0], quietItem)
 	quietQueue = append(quietQueue, q.items[1:]...)
 	q.items = quietQueue
-	player.Skip()
+	q.items[0].cancel()
 }
 
 // List returns all of the items currently on the queue as a JSON response. List is thread safe.
@@ -283,12 +285,19 @@ func (q *Queue) generateResponse() ([]byte, error) {
 	return response, nil
 }
 
-// Remove removes a QueueItem from the Queue. Remove is thread-safe. Note that slice indices must be integers in Go.
+// Remove removes a QueueItem from the Queue. Remove is thread-safe.
+// Note that slice indices must be integers in Go. Remove can also be used to skip a currently playing QueueItem.
 func (q *Queue) Remove(index int) {
 	q.Lock()
 	defer q.Unlock()
 	if index < len(q.items) {
+		q.items[index].cancel()
+		if index == 0 {
+			return
+		}
+		q.items[index].cancel()
 		q.items = append(q.items[:index], q.items[index+1:]...)
+		logrus.Debugf("remove item at index %v from queue", index)
 		q.sendQueueUpdate()
 	} else {
 		logrus.Infof("user attempted to remove now nonexistent queue item at index %v, ignoring", index)

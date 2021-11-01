@@ -124,11 +124,11 @@ func (p *Player) Play(item *QueueItem) error {
 		}
 	}
 	filePath := path.Join(dataDir, item.Media.Type, item.Media.ID+ext)
-	ready := <-item.ready
-
-	if !ready {
-		logrus.Warn("Item labeled as not ready, not playing.")
+	select {
+	case <-item.ctx.Done():
+		logrus.Infof("context canceled, not playing media")
 		return nil
+	case <-item.ready:
 	}
 
 	if err := vlc.Init("--quiet", "--fullscreen"); err != nil {
@@ -195,7 +195,8 @@ func (p *Player) Play(item *QueueItem) error {
 	}
 
 	eventID, err := eventManager.Attach(vlc.MediaPlayerEndReached, func(event vlc.Event, userData interface{}) {
-		p.doneChan <- true
+		item.cancel()
+		logrus.Debugf("playback finished")
 	}, nil)
 	if err != nil {
 		logrus.Errorf("error registering MediaPlayerEndReached event: %v", err)
@@ -211,22 +212,12 @@ func (p *Player) Play(item *QueueItem) error {
 	p.State = PLAYING
 	p.sendPlayerUpdate()
 
-	<-p.doneChan
+	<-item.ctx.Done()
 
 	p.State = STOPPED
 	p.sendPlayerUpdate()
 
 	return nil
-}
-
-// Skip skips the currently playing QueueItem in the Queue.
-func (p *Player) Skip() {
-	if p.State == PLAYING {
-		p.doneChan <- true
-	} else {
-		queue := GetQueue()
-		queue.items[0].ready <- false
-	}
 }
 
 // UpVolume increments the volume of the Player by 5, up to a maximum of 100.

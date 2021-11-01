@@ -16,11 +16,6 @@ func DeleteHandler(w http.ResponseWriter, r *http.Request) {
 		logrus.Warn("Error parsing int in DeleteHandler, user likely provided incorrect input.")
 		return
 	}
-	if int(index) == 0 {
-		playInstance := player.GetPlayer()
-		playInstance.Skip()
-	} else {
-		queue := player.GetQueue()
-		queue.Remove(int(index))
-	}
+	queue := player.GetQueue()
+	queue.Remove(int(index))
 }
