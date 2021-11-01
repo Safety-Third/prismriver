@@ -31,7 +31,10 @@ const (
 )
 
 // Player represents a player for Media items.
+// Not all Player fields are accessed by multiple threads. player is safely accessible without the lock.
 type Player struct {
+	sync.RWMutex
+
 	doneChan chan struct{}
 	player   *vlc.Player
 	State    int
@@ -59,7 +62,11 @@ func GetPlayer() *Player {
 		playerTicker = time.NewTicker(30 * time.Second)
 		go func() {
 			for range playerTicker.C{
-				response := playerInstance.GenerateResponse()
+				response, err := playerInstance.generateResponse()
+				if err != nil {
+					logrus.Errorf("could not generate player response: %v", err)
+					continue
+				}
 				playerInstance.Update <- response
 			}
 		}()
@@ -67,18 +74,16 @@ func GetPlayer() *Player {
 	return playerInstance
 }
 
-// GenerateResponse generates a JSON response representing the Player's current status.
-func (p Player) GenerateResponse() []byte {
+// generateResponse generates a JSON response representing the Player's current status.
+func (p *Player) generateResponse() ([]byte, error) {
 	if p.State == PLAYING {
 		currentTime, err := p.player.MediaTime()
 		if err != nil {
-			logrus.Error("Error getting player's media time:")
-			logrus.Error(err)
+			return nil, err
 		}
 		totalTime, err := p.player.MediaLength()
 		if err != nil {
-			logrus.Error("Error getting player's media length:")
-			logrus.Error(err)
+			return nil, err
 		}
 		response, err := json.Marshal(State{
 			CurrentTime: currentTime,
@@ -87,10 +92,9 @@ func (p Player) GenerateResponse() []byte {
 			Volume:      p.Volume,
 		})
 		if err != nil {
-			logrus.Error("Error generating JSON response:")
-			logrus.Error(err)
+			return nil, err
 		}
-		return response
+		return response, nil
 	}
 
 	response, err := json.Marshal(State{
@@ -100,20 +104,34 @@ func (p Player) GenerateResponse() []byte {
 		Volume:      p.Volume,
 	})
 	if err != nil {
-		logrus.Error("Error generating JSON response:")
-		logrus.Error(err)
+		return nil, err
 	}
-	return response
+	return response, nil
 }
 
-// Play begins playback on a QueueItem.
+// Get returns the Player's current status. Get is thread-safe.
+func (p *Player) Get() ([]byte, error) {
+	p.RLock()
+	defer p.RUnlock()
+	response, err := p.generateResponse()
+	if err != nil {
+		return nil, err
+	}
+	return response, nil
+}
+
+// Play begins playback on a QueueItem. Play is thread-safe.
 func (p *Player) Play(item *QueueItem) error {
 	defer func() {
+		p.Lock()
 		p.State = STOPPED
 		p.sendPlayerUpdate()
+		p.Unlock()
 		p.doneChan <- struct{}{}
 	}()
+	p.Lock()
 	p.State = LOADING
+	p.Unlock()
 	dataDir := viper.GetString(constants.DATA)
 	ext := ".opus"
 	if item.Media.Video {
@@ -172,16 +190,23 @@ func (p *Player) Play(item *QueueItem) error {
 		}
 	}()
 
+	p.Lock()
+	p.State = PLAYING
+	p.Unlock()
+
 	if err := p.player.Play(); err != nil {
 		logrus.Error("Error playing media file:")
 		logrus.Error(err)
 		return err
 	}
 
+	p.RLock()
 	if err := p.player.SetVolume(p.Volume); err != nil {
 		logrus.Errorf("error setting volume: %v", err)
+		p.RUnlock()
 		return err
 	}
+	p.RUnlock()
 
 	if err := p.player.SetFullScreen(true); err != nil {
 		logrus.Errorf("error setting fullscreen: %v", err)
@@ -196,7 +221,9 @@ func (p *Player) Play(item *QueueItem) error {
 
 	// play() does not guarantee that metadata will be available, so we wait for mediaplayerplaying instead
 	eventID, err := eventManager.Attach(vlc.MediaPlayerPlaying, func(event vlc.Event, userData interface{}) {
+		p.RLock()
 		p.sendPlayerUpdate()
+		p.RUnlock()
 	}, nil)
 	if err != nil {
 		logrus.Errorf("error registering mediaplayerplaying event: %v", err)
@@ -213,19 +240,14 @@ func (p *Player) Play(item *QueueItem) error {
 	}
 	defer eventManager.Detach(eventID)
 
-	p.State = PLAYING
-	p.sendPlayerUpdate()
-
 	<-item.ctx.Done()
-
-	p.State = STOPPED
-	p.sendPlayerUpdate()
-
 	return nil
 }
 
-// UpVolume increments the volume of the Player by 5, up to a maximum of 100.
+// UpVolume increments the volume of the Player by 5, up to a maximum of 100. UpVolume is thread-safe.
 func (p *Player) UpVolume() {
+	p.Lock()
+	defer p.Unlock()
 	if p.Volume == 100 {
 		return
 	}
@@ -239,8 +261,10 @@ func (p *Player) UpVolume() {
 	p.sendPlayerUpdate()
 }
 
-// DownVolume decrements the volume of the Player by 5, down to a minimum of 0.
+// DownVolume decrements the volume of the Player by 5, down to a minimum of 0. DownVolume is thread-safe.
 func (p *Player) DownVolume() {
+	p.Lock()
+	defer p.Unlock()
 	if p.Volume == 0 {
 		return
 	}
@@ -254,8 +278,10 @@ func (p *Player) DownVolume() {
 	p.sendPlayerUpdate()
 }
 
-// Seek sets the player to a certain time.
+// Seek sets the player to a certain time. Seek is thread-safe.
 func (p *Player) Seek(milliseconds int) error {
+	p.Lock()
+	defer p.Unlock()
 	if p.State != PLAYING {
 		return errors.New("cannot seek player that isn't playing")
 	}
@@ -265,8 +291,12 @@ func (p *Player) Seek(milliseconds int) error {
 	return nil
 }
 
-func (p Player) sendPlayerUpdate() {
-	response := p.GenerateResponse()
+func (p *Player) sendPlayerUpdate() {
+	response, err := p.generateResponse()
+	if err != nil {
+		logrus.Errorf("could not generate player response: %v", err)
+		return
+	}
 	p.Update <- response
 	logrus.Debug("Sent player update event.")
 }

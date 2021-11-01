@@ -56,7 +56,11 @@ func WebsocketPlayerHandler(w http.ResponseWriter, r *http.Request) {
 	go client.RunWrite()
 
 	playerInstance := player.GetPlayer()
-	response := playerInstance.GenerateResponse()
+	response, err := playerInstance.Get()
+	if err != nil {
+		logrus.Errorf("could not generate player response: %v", err)
+		return
+	}
 	client.Send <- response
 	logrus.Debug("Sent initial message on WS connection.")
 }
