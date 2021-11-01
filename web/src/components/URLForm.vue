@@ -13,7 +13,7 @@
       </v-col>
     </v-card-text>
     <v-card-actions class="mb-0 pb-0 mt-0 pt-0">
-      <v-checkbox class="mb-0 pb-0 mt-1 pt-1 ml-2" label="With Video" v-model="video"/>
+      <v-checkbox class="mb-0 pb-0 mt-1 pt-1 ml-2" label="With Video" v-model="video" :disabled="adding"/>
     </v-card-actions>
     <v-snackbar timeout="3000" v-model="addMessage">Submitted! Now preparing song...</v-snackbar>
     <v-snackbar timeout="3000" v-model="randomMessage">Added a random song!</v-snackbar>
