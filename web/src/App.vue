@@ -127,6 +127,7 @@ export default Vue.extend({
 
   data: () => ({
     balancing: true,
+    fails: 0,
     items: [],
     playerWS: 0,
     queueWS: 0,
@@ -145,12 +146,20 @@ export default Vue.extend({
 
       this.socket.addEventListener('close', () => {
         this.queueWS = 0
+        this.fails++
+        if (this.fails >= 10) {
+          location.reload()
+        }
+        setTimeout(() => {
+          this.connectWS()
+        }, 5000)
       })
       this.socket.addEventListener('error', () => {
         this.queueWS = 2
       })
       this.socket.addEventListener('message', (event: MessageEvent) => {
         this.queueWS = 1
+        this.fails = 0
         const queue = JSON.parse(event.data)
         this.balancing = queue.balancing
         this.items = queue.items
@@ -180,12 +189,6 @@ export default Vue.extend({
     } catch (e) {}
 
     this.connectWS()
-
-    setInterval(() => {
-      if (this.queueWS === 0) {
-        this.connectWS()
-      }
-    }, 5000)
   }
 })
 </script>

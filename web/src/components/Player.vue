@@ -47,6 +47,7 @@ export default Vue.extend({
 
   data: () => ({
     currentTime: 0,
+    fails: 0,
     seeking: false,
     socket: null as WebSocket | null,
     state: 0,
@@ -61,12 +62,20 @@ export default Vue.extend({
 
       this.socket.addEventListener('close', () => {
         this.ws = 0
+        this.fails++
+        if (this.fails >= 10) {
+          location.reload()
+        }
+        setTimeout(() => {
+          this.connectWS()
+        }, 5000)
       })
       this.socket.addEventListener('error', () => {
         this.ws = 2
       })
       this.socket.addEventListener('message', (event: MessageEvent) => {
         this.ws = 1
+        this.fails = 0
         const data = JSON.parse(event.data)
         this.currentTime = data.CurrentTime
         this.totalTime = data.TotalTime
@@ -110,12 +119,6 @@ export default Vue.extend({
         this.currentTime += 1000
       }
     }, 1000)
-
-    setInterval(() => {
-      if (this.ws === 0) {
-        this.connectWS()
-      }
-    }, 5000)
   },
 
   props: ['item'],
