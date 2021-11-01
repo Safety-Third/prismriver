@@ -32,7 +32,7 @@ const (
 
 // Player represents a player for Media items.
 type Player struct {
-	doneChan chan bool
+	doneChan chan struct{}
 	player   *vlc.Player
 	State    int
 	Update   chan []byte
@@ -51,7 +51,7 @@ type State struct {
 func GetPlayer() *Player {
 	playerOnce.Do(func() {
 		playerInstance = &Player{
-			doneChan: make(chan bool),
+			doneChan: make(chan struct{}),
 			State:    STOPPED,
 			Update:   make(chan []byte),
 			Volume:   100,
@@ -110,8 +110,8 @@ func (p Player) GenerateResponse() []byte {
 func (p *Player) Play(item *QueueItem) error {
 	defer func() {
 		p.State = STOPPED
-		queue := GetQueue()
-		queue.Advance()
+		p.sendPlayerUpdate()
+		p.doneChan <- struct{}{}
 	}()
 	p.State = LOADING
 	dataDir := viper.GetString(constants.DATA)

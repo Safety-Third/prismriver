@@ -82,6 +82,12 @@ func GetQueue() *Queue {
 			items:     make([]*QueueItem, 0),
 			Update:    make(chan []byte),
 		}
+		go func() {
+			player := GetPlayer()
+			for range player.doneChan {
+				queueInstance.Advance()
+			}
+		}()
 	})
 	return queueInstance
 }
