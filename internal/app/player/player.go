@@ -194,7 +194,16 @@ func (p *Player) Play(item *QueueItem) error {
 		return err
 	}
 
-	eventID, err := eventManager.Attach(vlc.MediaPlayerEndReached, func(event vlc.Event, userData interface{}) {
+	// play() does not guarantee that metadata will be available, so we wait for mediaplayerplaying instead
+	eventID, err := eventManager.Attach(vlc.MediaPlayerPlaying, func(event vlc.Event, userData interface{}) {
+		p.sendPlayerUpdate()
+	}, nil)
+	if err != nil {
+		logrus.Errorf("error registering mediaplayerplaying event: %v", err)
+		return err
+	}
+	defer eventManager.Detach(eventID)
+	eventID, err = eventManager.Attach(vlc.MediaPlayerEndReached, func(event vlc.Event, userData interface{}) {
 		item.cancel()
 		logrus.Debugf("playback finished")
 	}, nil)
@@ -204,11 +213,6 @@ func (p *Player) Play(item *QueueItem) error {
 	}
 	defer eventManager.Detach(eventID)
 
-	time.Sleep(1 * time.Second)
-	length, err := p.player.MediaLength()
-	if err != nil || length == 0 {
-		length = 1000 * 60
-	}
 	p.State = PLAYING
 	p.sendPlayerUpdate()
 
