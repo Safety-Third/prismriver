@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"math"
 	"path"
+	"strings"
 	"sync"
 )
 
@@ -35,6 +36,23 @@ func GetDatabase() (*gorm.DB, error) {
 			return
 		}
 		if err = db.AutoMigrate(&Media{}); err != nil {
+			return
+		}
+		// manual sql queries to set up search indexing
+		if err = db.Exec("CREATE VIRTUAL TABLE IF NOT EXISTS media_fts USING fts5(title, content=media, tokenize='porter trigram');").Error; err != nil {
+			return
+		}
+		if err = db.Exec("CREATE TRIGGER IF NOT EXISTS media_fts_insert AFTER INSERT ON media BEGIN " +
+			"INSERT INTO media_fts (rowid, title) VALUES (new.rowid, new.title); END;").Error; err != nil {
+			return
+		}
+		if err = db.Exec("CREATE TRIGGER IF NOT EXISTS media_fts_delete AFTER DELETE ON media BEGIN " +
+			"INSERT INTO media_fts (media_fts, rowid, title) VALUES ('delete', old.rowid, old.title); END;").Error; err != nil {
+			return
+		}
+		if err = db.Exec("CREATE TRIGGER IF NOT EXISTS media_fts_insert UPDATE ON media BEGIN " +
+			"INSERT INTO media_fts (media_fts, rowid, title) VALUES ('delete', old.rowid, old.title);" +
+			"INSERT INTO media_fts (rowid, title) VALUES (new.rowid, new.title); END;").Error; err != nil {
 			return
 		}
 		if err = db.FirstOrCreate(BeQuiet).Error; err != nil {
@@ -64,11 +82,16 @@ func FindMedia(query string, limit int, page int) ([]Media, uint) {
 	if page == 0 {
 		page = 1
 	}
+	tokens := strings.Split(query, " ")
+	for i, token := range tokens {
+		tokens[i] = fmt.Sprintf("\"%v\"*", strings.Replace(token, "\"", "\"\"", -1))
+	}
+	subquery := db.Select("ROWID").Table("media_fts(?)", strings.Join(tokens, " ")).Order("rank")
 	var media []Media
-	db.Limit(limit).Offset((page - 1) * limit).Where("title LIKE ? AND type <> ?", "%"+query+"%", "internal").Find(&media)
-	var count float64
-	db.Model(&Media{}).Where("title ILIKE ? AND type <> ?", "%" + query + "%", "internal").Count(&count)
-	return media, uint(math.Ceil(count / float64(limit)))
+	db.Limit(limit).Offset((page - 1) * limit).Where("ROWID IN (?) AND type <> ?", subquery, "internal").Find(&media)
+	var count int64
+	db.Model(&Media{}).Where("ROWID IN (?) AND type <> ?", subquery, "internal").Count(&count)
+	return media, uint(math.Ceil(float64(count) / float64(limit)))
 }
 
 // GetMedia attempts to return the Media identified by id and kind, and returns an error if not found.

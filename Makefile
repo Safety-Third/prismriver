@@ -2,7 +2,7 @@ all: build validate
 
 build:
 	fileb0x assets.json
-	go build cmd/prismriver/prismriver.go
+	go build --tags=fts5 cmd/prismriver/prismriver.go
 
 install:
 	install -b -D -m644 "config/prismriver.yml" "/etc/prismriver/prismriver.yml"
