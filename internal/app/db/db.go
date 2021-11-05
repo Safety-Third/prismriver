@@ -1,17 +1,18 @@
 package db
 
 import (
-	"fmt"
-	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
-	"gitlab.com/ttpcodes/prismriver/internal/app/constants"
-	"math"
-	"sync"
+	"gorm.io/gorm"
+	"gorm.io/driver/sqlite"
 
-	// Import Postgres dialect.
-	_ "github.com/jinzhu/gorm/dialects/postgres"
+	"gitlab.com/ttpcodes/prismriver/internal/app/constants"
+
+	"fmt"
+	"math"
+	"path"
+	"sync"
 )
 
 var db *gorm.DB
@@ -29,21 +30,16 @@ var BeQuiet = &Media{
 // GetDatabase gets the instance of the database connection used for the application.
 func GetDatabase() (*gorm.DB, error) {
 	once.Do(func() {
-		dbHost := viper.GetString(constants.DB_HOST)
-		dbName := viper.GetString(constants.DB_NAME)
-		dbPassword := viper.GetString(constants.DB_PASSWORD)
-		dbPort := viper.GetString(constants.DB_PORT)
-		dbUser := viper.GetString(constants.DB_USER)
-		connString := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", dbHost,
-			dbPort, dbUser, dbPassword, dbName)
-		newDb, openErr := gorm.Open("postgres", connString)
-		err = openErr
-		db = newDb
+		db, err = gorm.Open(sqlite.Open(path.Join(viper.GetString(constants.DATA), "prismriver.db")), &gorm.Config{})
 		if err != nil {
 			return
 		}
-		db.AutoMigrate(&Media{})
-		db.FirstOrCreate(BeQuiet)
+		if err = db.AutoMigrate(&Media{}); err != nil {
+			return
+		}
+		if err = db.FirstOrCreate(BeQuiet).Error; err != nil {
+			return
+		}
 	})
 	return db, err
 }
@@ -60,7 +56,7 @@ func AddMedia(media Media) error {
 
 // FindMedia searches the database for Media items matching the title in query and returns the number of results
 // specified by limit.
-func FindMedia(query string, limit uint, page uint) ([]Media, uint) {
+func FindMedia(query string, limit int, page int) ([]Media, uint) {
 	db, err := GetDatabase()
 	if err != nil {
 		logrus.Fatal("Error loading database:", err)
@@ -69,7 +65,7 @@ func FindMedia(query string, limit uint, page uint) ([]Media, uint) {
 		page = 1
 	}
 	var media []Media
-	db.Limit(limit).Offset((page - 1) * limit).Where("title ILIKE ? AND type <> ?", "%"+query+"%", "internal").Find(&media)
+	db.Limit(limit).Offset((page - 1) * limit).Where("title LIKE ? AND type <> ?", "%"+query+"%", "internal").Find(&media)
 	var count float64
 	db.Model(&Media{}).Where("title ILIKE ? AND type <> ?", "%" + query + "%", "internal").Count(&count)
 	return media, uint(math.Ceil(count / float64(limit)))
@@ -104,7 +100,7 @@ func GetMediaByURL(url string) (Media, error) {
 }
 
 // GetRandomMedia returns a number of random Media specified by limit.
-func GetRandomMedia(limit uint) []Media {
+func GetRandomMedia(limit int) []Media {
 	db, err := GetDatabase()
 	if err != nil {
 		logrus.Fatal("Error loading database:", err)

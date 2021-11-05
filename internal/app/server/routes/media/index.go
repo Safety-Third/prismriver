@@ -26,7 +26,7 @@ func IndexHandler(w http.ResponseWriter, r *http.Request) {
 	var response indexResponse
 	if query == "" {
 		response = indexResponse{
-			Media: db.GetRandomMedia(uint(limit)),
+			Media: db.GetRandomMedia(int(limit)),
 			Pages: 1,
 		}
 	} else {
@@ -36,7 +36,7 @@ func IndexHandler(w http.ResponseWriter, r *http.Request) {
 			logrus.Infof("could not parse %v as page, defaulting to 1", pageParam)
 			page = 1
 		}
-		media, pages := db.FindMedia(query, uint(limit), uint(page))
+		media, pages := db.FindMedia(query, int(limit), int(page))
 		response = indexResponse{
 			Media: media,
 			Pages: pages,
