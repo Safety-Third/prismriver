@@ -288,6 +288,7 @@ func (p *Player) Seek(milliseconds int) error {
 	if err := p.player.SetMediaTime(milliseconds); err != nil {
 		return err
 	}
+	p.sendPlayerUpdate()
 	return nil
 }
 
