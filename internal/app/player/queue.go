@@ -97,21 +97,7 @@ func GetQueue() *Queue {
 func (q *Queue) Add(media db.Media, owner uint32) {
 	q.Lock()
 	defer q.Unlock()
-	var id uint32 = 0
-	for q.contains(id) {
-		id = rand.Uint32()
-	}
-	ctx, cancel := context.WithCancel(context.Background())
-	item := &QueueItem{
-		balanced: q.balancing,
-		cancel:   cancel,
-		ctx:      ctx,
-		id:       id,
-		Media:    media,
-		owner:    owner,
-		ready:    make(chan struct{}),
-		queue:    q,
-	}
+	item := q.newQueueItem(media, owner)
 	if q.balancing {
 		q.items = InsertQueueItemBalanced(item, q.items)
 	} else {
@@ -213,27 +199,22 @@ func (q *Queue) Advance() {
 
 // BeQuiet replaces the currently playing item with the BeQuiet Media and plays it. BeQuiet is thread-safe.
 func (q *Queue) BeQuiet() {
-	player := GetPlayer()
 	q.Lock()
 	defer q.Unlock()
-	if len(q.items) == 0 {
-		q.Add(*db.BeQuiet, 0)
-		q.Unlock()
-		return
-	} else if player.State == LOADING {
-		return
+	item := q.newQueueItem(*db.BeQuiet, 0)
+	close(item.ready)
+	old := q.items
+	q.items = make([]*QueueItem, 0)
+	if len(old) == 0 {
+		q.items = append(q.items, item)
+		player := GetPlayer()
+		go player.Play(item)
+	} else {
+		q.items = append(q.items, old[0], item)
+		q.items = append(q.items, old[1:]...)
+		q.items[0].cancel()
 	}
-	quietQueue := make([]*QueueItem, 0)
-	quietItem := &QueueItem{
-		Media: *db.BeQuiet,
-		ready: make(chan struct{}),
-		queue: q,
-	}
-	close(quietItem.ready)
-	quietQueue = append(quietQueue, q.items[0], quietItem)
-	quietQueue = append(quietQueue, q.items[1:]...)
-	q.items = quietQueue
-	q.items[0].cancel()
+	q.sendQueueUpdate()
 }
 
 // List returns all of the items currently on the queue as a JSON response. List is thread safe.
@@ -346,6 +327,24 @@ func (q *Queue) sendQueueUpdate() {
 		return
 	}
 	q.Update <- response
+}
+
+func (q *Queue) newQueueItem(media db.Media, owner uint32) *QueueItem {
+	var id uint32 = 0
+	for q.contains(id) {
+		id = rand.Uint32()
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	return &QueueItem{
+		balanced: q.balancing,
+		cancel: cancel,
+		ctx: ctx,
+		id: id,
+		Media: media,
+		owner: owner,
+		ready: make(chan struct{}),
+		queue: q,
+	}
 }
 
 // generateResponse returns the QueueItemResponse form of the QueueItem.
