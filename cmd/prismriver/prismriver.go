@@ -8,9 +8,9 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 
-	"gitlab.com/ttpcodes/prismriver/assets"
-	"gitlab.com/ttpcodes/prismriver/internal/app/constants"
-	"gitlab.com/ttpcodes/prismriver/internal/app/server"
+	"github.com/Safety-Third/prismriver/assets"
+	"github.com/Safety-Third/prismriver/internal/app/constants"
+	"github.com/Safety-Third/prismriver/internal/app/server"
 )
 
 func main() {
