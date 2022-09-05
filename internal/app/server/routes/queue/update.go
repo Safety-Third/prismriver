@@ -2,7 +2,7 @@ package queue
 
 import (
 	"github.com/sirupsen/logrus"
-	"gitlab.com/ttpcodes/prismriver/internal/app/player"
+	"github.com/Safety-Third/prismriver/internal/app/player"
 	"net/http"
 	"strconv"
 )

@@ -6,7 +6,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 
-	"gitlab.com/ttpcodes/prismriver/internal/app/player"
+	"github.com/Safety-Third/prismriver/internal/app/player"
 )
 
 // UpdateHandler handles requests for changes to the Player, such as calling "Be Quiet!" or modifying the volume.

@@ -3,7 +3,7 @@ package media
 import (
 	"encoding/json"
 	"github.com/sirupsen/logrus"
-	"gitlab.com/ttpcodes/prismriver/internal/app/db"
+	"github.com/Safety-Third/prismriver/internal/app/db"
 	"net/http"
 	"strconv"
 )

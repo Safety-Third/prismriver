@@ -3,8 +3,8 @@ package routes
 import (
 	"github.com/gorilla/websocket"
 	"github.com/sirupsen/logrus"
-	"gitlab.com/ttpcodes/prismriver/internal/app/player"
-	"gitlab.com/ttpcodes/prismriver/internal/app/server/ws"
+	"github.com/Safety-Third/prismriver/internal/app/player"
+	"github.com/Safety-Third/prismriver/internal/app/server/ws"
 	"net/http"
 	"sync"
 )

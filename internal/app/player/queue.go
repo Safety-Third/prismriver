@@ -11,9 +11,9 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 
-	"gitlab.com/ttpcodes/prismriver/internal/app/constants"
-	"gitlab.com/ttpcodes/prismriver/internal/app/db"
-	"gitlab.com/ttpcodes/prismriver/internal/app/downloader"
+	"github.com/Safety-Third/prismriver/internal/app/constants"
+	"github.com/Safety-Third/prismriver/internal/app/db"
+	"github.com/Safety-Third/prismriver/internal/app/downloader"
 )
 
 var queueInstance *Queue

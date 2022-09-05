@@ -12,8 +12,8 @@ import (
 	"github.com/xfrr/goffmpeg/transcoder"
 	youtubedl "gitlab.com/ttpcodes/youtube-dl-go"
 
-	"gitlab.com/ttpcodes/prismriver/internal/app/constants"
-	"gitlab.com/ttpcodes/prismriver/internal/app/db"
+	"github.com/Safety-Third/prismriver/internal/app/constants"
+	"github.com/Safety-Third/prismriver/internal/app/db"
 )
 
 // DownloadMedia runs a download on a given item in a goroutine. This can be tracked using the returned channels.

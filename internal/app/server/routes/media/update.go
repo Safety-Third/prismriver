@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
-	"gitlab.com/ttpcodes/prismriver/internal/app/db"
-	"gitlab.com/ttpcodes/prismriver/internal/app/downloader"
+	"github.com/Safety-Third/prismriver/internal/app/db"
+	"github.com/Safety-Third/prismriver/internal/app/downloader"
 	"net/http"
 	"strconv"
 )

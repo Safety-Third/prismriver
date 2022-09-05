@@ -8,9 +8,9 @@ import (
 
 	"github.com/sirupsen/logrus"
 
-	"gitlab.com/ttpcodes/prismriver/internal/app/db"
-	"gitlab.com/ttpcodes/prismriver/internal/app/downloader"
-	"gitlab.com/ttpcodes/prismriver/internal/app/player"
+	"github.com/Safety-Third/prismriver/internal/app/db"
+	"github.com/Safety-Third/prismriver/internal/app/downloader"
+	"github.com/Safety-Third/prismriver/internal/app/player"
 )
 
 // StoreHandler handles requests for adding new QueueItems.

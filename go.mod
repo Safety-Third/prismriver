@@ -1,4 +1,4 @@
-module gitlab.com/ttpcodes/prismriver
+module github.com/Safety-Third/prismriver
 
 go 1.11
 

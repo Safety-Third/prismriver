@@ -11,7 +11,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 
-	"gitlab.com/ttpcodes/prismriver/internal/app/constants"
+	"github.com/Safety-Third/prismriver/internal/app/constants"
 )
 
 var playerInstance *Player

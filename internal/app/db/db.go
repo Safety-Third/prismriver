@@ -7,7 +7,7 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/driver/sqlite"
 
-	"gitlab.com/ttpcodes/prismriver/internal/app/constants"
+	"github.com/Safety-Third/prismriver/internal/app/constants"
 
 	"fmt"
 	"math"

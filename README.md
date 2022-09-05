@@ -104,7 +104,7 @@ assets)
 
 Begin by cloning the repository:
 ```bash
-git clone https://gitlab.com/ttpcodes/prismriver
+git clone https://github.com/Safety-Third/prismriver
 cd prismriver/
 ```
 This project contains a Makefile which will handle building of everything for

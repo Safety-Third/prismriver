@@ -3,7 +3,7 @@ package item
 import (
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
-	"gitlab.com/ttpcodes/prismriver/internal/app/player"
+	"github.com/Safety-Third/prismriver/internal/app/player"
 	"net/http"
 	"strconv"
 )
